@@ -26,6 +26,10 @@ export default function ResultsPage() {
         }
     }, []);
 
+    const handleCheckout = () => {
+        window.location.href = "https://pay.kiwify.com.br/Ji56d15";
+    };
+
     if (!result) {
         return (
             <main className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -64,6 +68,7 @@ export default function ResultsPage() {
                     <BlurReveal
                         title="ANÁLISE FACIAL"
                         description="Desbloqueie a análise detalhada da sua simetria e pele."
+                        onUnlock={handleCheckout}
                     >
                         <div className="p-8 space-y-6 bg-secondary/30 border border-white/10 rounded-2xl h-full hover:border-primary/30 transition-colors">
                             <h3 className="text-xl font-bold flex items-center gap-3 text-white">
@@ -90,6 +95,12 @@ export default function ResultsPage() {
                                         <Lock className="w-3 h-3" /> BLOQUEADO
                                     </div>
                                 </div>
+                                <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                                    <span className="text-gray-300">Canthal Tilt</span>
+                                    <div className="flex items-center gap-2 text-xs font-mono bg-black/50 px-2 py-1 rounded border border-white/10">
+                                        <Lock className="w-3 h-3" /> BLOQUEADO
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </BlurReveal>
@@ -98,6 +109,7 @@ export default function ResultsPage() {
                     <BlurReveal
                         title="PROTOCOLO CORPORAL"
                         description="Acesse seu plano de correção postural e shape."
+                        onUnlock={handleCheckout}
                     >
                         <div className="p-8 space-y-6 bg-secondary/30 border border-white/10 rounded-2xl h-full hover:border-primary/30 transition-colors">
                             <h3 className="text-xl font-bold flex items-center gap-3 text-white">
@@ -123,7 +135,7 @@ export default function ResultsPage() {
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center border-b border-white/5 pb-3">
-                                    <span className="text-gray-300">Plano de Treino</span>
+                                    <span className="text-gray-300">Simetria de Ombros</span>
                                     <CheckCircle2 className="w-5 h-5 text-primary" />
                                 </div>
                             </div>
@@ -145,7 +157,11 @@ export default function ResultsPage() {
                     </div>
 
                     <div className="flex flex-col items-center gap-4 relative z-10">
-                        <Button size="lg" className="w-full md:w-auto px-12 h-20 text-xl font-bold uppercase tracking-wide animate-pulse shadow-[0_0_40px_rgba(57,255,20,0.4)] hover:shadow-[0_0_60px_rgba(57,255,20,0.6)] hover:scale-105 transition-all duration-300">
+                        <Button
+                            size="lg"
+                            className="w-full md:w-auto px-12 h-20 text-xl font-bold uppercase tracking-wide animate-pulse shadow-[0_0_40px_rgba(57,255,20,0.4)] hover:shadow-[0_0_60px_rgba(57,255,20,0.6)] hover:scale-105 transition-all duration-300"
+                            onClick={handleCheckout}
+                        >
                             CORRIGIR MINHAS FALHAS AGORA
                             <Zap className="ml-2 w-6 h-6 fill-current" />
                         </Button>
