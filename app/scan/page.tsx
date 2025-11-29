@@ -15,19 +15,47 @@ export default function ScanPage() {
     const handleAnalyze = async () => {
         if (!faceFile) return;
 
-        const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+        const resizeImage = (file: File) => new Promise<string>((resolve, reject) => {
             const reader = new FileReader();
             reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = error => reject(error);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_SIZE = 1024;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL("image/jpeg", 0.8));
+                };
+                img.onerror = (error) => reject(error);
+            };
+            reader.onerror = (error) => reject(error);
         });
 
         try {
-            const faceBase64 = await toBase64(faceFile);
+            const faceBase64 = await resizeImage(faceFile);
             localStorage.setItem("faceImage", faceBase64);
 
             if (bodyFile) {
-                const bodyBase64 = await toBase64(bodyFile);
+                const bodyBase64 = await resizeImage(bodyFile);
                 localStorage.setItem("bodyImage", bodyBase64);
             } else {
                 localStorage.removeItem("bodyImage");
@@ -35,7 +63,7 @@ export default function ScanPage() {
 
             router.push("/analyzing");
         } catch (error) {
-            console.error("Error converting images:", error);
+            console.error("Error processing images:", error);
             alert("Erro ao processar imagens. Tente novamente.");
         }
     };
