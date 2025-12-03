@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, AlertCircle, ScanFace, User } from "lucide-react";
@@ -126,6 +127,7 @@ export default function ScanPage() {
                     </Button>
                 </div>
             </div>
+            <Footer />
         </main>
     );
 }

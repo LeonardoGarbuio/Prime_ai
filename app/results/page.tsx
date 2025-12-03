@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
 import { BlurReveal } from "@/components/ui/BlurReveal";
 import {
@@ -37,7 +38,7 @@ export default function ResultsPage() {
     }, []);
 
     const handleCheckout = () => {
-        window.location.href = "https://pay.kiwify.com.br/Ji56d15";
+        window.location.href = "/checkout";
     };
 
     if (!result) {
@@ -77,47 +78,65 @@ export default function ResultsPage() {
                         ANÁLISE GERAL
                     </h2>
 
-                    <div className="bg-white/5 border border-white/10 rounded-3xl p-8 md:p-12 relative overflow-hidden backdrop-blur-sm">
-                        {/* Glow Effect */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-emerald-500/20 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                        <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 md:p-12 pb-24 md:pb-32 overflow-hidden">
+                            {/* Background Grid & Effects */}
+                            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20" />
+                            <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-                        <div className="space-y-12">
-                            {/* Bar 1: Current Score */}
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-end text-gray-400 font-mono text-sm">
-                                    <span>SUA NOTA ATUAL</span>
-                                    <span className="text-2xl text-white font-bold">{currentScore}</span>
-                                </div>
-                                <div className="h-4 bg-gray-800 rounded-full overflow-hidden relative">
-                                    <div
-                                        className="h-full bg-gray-500 rounded-full"
-                                        style={{ width: `${(currentScore / 10) * 100}%` }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Bar 2: Potential Score */}
-                            <div className="space-y-2 relative">
-                                <div className="flex justify-between items-end text-primary font-mono text-sm font-bold">
-                                    <span className="drop-shadow-[0_0_5px_rgba(57,255,20,0.8)]">SEU POTENCIAL</span>
-                                    <span className="text-4xl text-primary drop-shadow-[0_0_10px_rgba(57,255,20,0.8)]">{potentialScore}</span>
-                                </div>
-                                <div className="h-6 bg-gray-900/50 rounded-full overflow-hidden relative border border-primary/20">
-                                    <div
-                                        className="h-full bg-primary shadow-[0_0_20px_rgba(57,255,20,0.6)] rounded-full relative"
-                                        style={{ width: `${(potentialScore / 10) * 100}%` }}
-                                    >
-                                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                            <div className="relative space-y-12">
+                                {/* Bar 1: Current Score */}
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-gray-400 font-medium text-sm tracking-wider uppercase">Sua Nota Atual</span>
+                                        <span className="text-3xl text-white font-bold font-mono tracking-tighter">{currentScore}</span>
+                                    </div>
+                                    <div className="h-6 bg-gray-900 rounded-full overflow-hidden relative shadow-inner border border-white/5">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full relative"
+                                            style={{ width: `${(currentScore / 10) * 100}%` }}
+                                        >
+                                            <div className="absolute inset-0 bg-white/10" />
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* GAP ANNOTATION */}
-                                <div className="absolute top-12 md:top-8 left-[70%] md:left-[80%] -translate-x-1/2 flex flex-col items-center animate-bounce duration-[2000ms]">
-                                    <ArrowUp className="text-red-500 w-8 h-8 rotate-180 drop-shadow-[0_0_8px_rgba(255,0,0,0.8)]" />
-                                    <div className="bg-red-500/10 border border-red-500/50 px-3 py-1 rounded text-red-500 text-xs font-bold font-mono whitespace-nowrap backdrop-blur-md">
-                                        GAP DE BELEZA: {gap} PONTOS
-                                        <br />
-                                        <span className="text-[10px] opacity-80">(O que você está perdendo)</span>
+                                {/* Bar 2: Potential Score */}
+                                <div className="space-y-3 relative">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-primary font-bold text-sm tracking-wider uppercase drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]">Seu Potencial Máximo</span>
+                                        <span className="text-5xl text-primary font-black font-mono tracking-tighter drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">{potentialScore}</span>
+                                    </div>
+
+                                    <div className="relative">
+                                        {/* Background Track */}
+                                        <div className="h-8 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                                            {/* Fill Bar */}
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-500 to-primary shadow-[0_0_30px_rgba(57,255,20,0.3)] rounded-full relative transition-all duration-1000 ease-out"
+                                                style={{ width: `${(potentialScore / 10) * 100}%` }}
+                                            >
+                                                <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_50%,transparent_75%)] bg-[length:20px_20px] animate-[shimmer_1s_infinite_linear]" />
+                                            </div>
+                                        </div>
+
+                                        {/* GAP INDICATOR - Modern & Clean */}
+                                        <div
+                                            className="absolute top-full mt-4 flex flex-col items-center z-20"
+                                            style={{ left: `${(currentScore / 10) * 100 + ((potentialScore - currentScore) / 20) * 100}%`, transform: 'translateX(-50%)' }}
+                                        >
+                                            {/* Connecting Bracket/Line */}
+                                            <div className="w-px h-4 bg-gradient-to-b from-rose-500/50 to-rose-500 mb-1"></div>
+
+                                            <div className="bg-rose-500/10 backdrop-blur-md border border-rose-500/30 px-4 py-2 rounded-xl flex items-center gap-3 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-rose-300 font-medium uppercase tracking-wider leading-none mb-1">Potencial Desperdiçado</span>
+                                                    <span className="text-lg font-bold text-rose-500 font-mono leading-none">+{gap} PONTOS</span>
+                                                </div>
+                                                <ArrowUp className="w-5 h-5 text-rose-500 animate-bounce" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -286,6 +305,7 @@ export default function ResultsPage() {
                     </div>
                 </div>
             </div>
+            <Footer />
         </main>
     );
 }

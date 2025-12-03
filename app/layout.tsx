@@ -33,9 +33,9 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${outfit.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
+        suppressHydrationWarning
       >
         {children}
-        <Footer />
         <Analytics />
       </body>
     </html>
