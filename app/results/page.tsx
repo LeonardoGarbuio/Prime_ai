@@ -33,12 +33,52 @@ export default function ResultsPage() {
     useEffect(() => {
         const data = localStorage.getItem("analysisResult");
         if (data) {
-            setResult(JSON.parse(data));
+            const parsed = JSON.parse(data);
+            console.log("Loaded Analysis Result:", parsed); // DEBUG
+            setResult(parsed);
         }
     }, []);
 
+    // Dynamic Checkout Links Mapping
+    const checkoutLinks: { [key: string]: string } = {
+        "Oval": "https://pay.kiwify.com.br/jA1VCkP",
+        "Redondo": "https://pay.kiwify.com.br/d2V0GRV",
+        "Quadrado": "https://pay.kiwify.com.br/2NpS9yr",
+        "Diamante": "https://pay.kiwify.com.br/mf92DQg",
+        "Triângulo": "https://pay.kiwify.com.br/zUiaLx7",
+        "Coração": "https://pay.kiwify.com.br/yzdk5qo",
+    };
+
     const handleCheckout = () => {
-        window.location.href = "https://pay.kiwify.com.br/Ji56d15";
+        if (!result) {
+            console.error("Result is null");
+            return;
+        }
+
+        try {
+            // Normalize the face shape string to match keys (e.g., "oval" -> "Oval")
+            const faceShape = result.rosto?.formato_rosto || "default";
+            console.log("Detected Face Shape:", faceShape);
+
+            // Find the matching key (case-insensitive)
+            const linkKey = Object.keys(checkoutLinks).find(key =>
+                key.toLowerCase() === faceShape.toLowerCase()
+            ) || "default";
+            console.log("Link Key:", linkKey);
+
+            const checkoutUrl = checkoutLinks[linkKey] || checkoutLinks["default"];
+            console.log("Redirecting to:", checkoutUrl);
+
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            } else {
+                alert("Erro ao gerar link de pagamento. Tente novamente.");
+            }
+        } catch (error) {
+            console.error("Checkout Error:", error);
+            // Fallback to default link in case of any error
+            window.location.href = "https://pay.kiwify.com.br/Ji56d15";
+        }
     };
 
     if (!result) {
@@ -51,11 +91,11 @@ export default function ResultsPage() {
 
     // Data for Radar Chart
     const radarData = [
-        { subject: 'SIMETRIA', A: 65, B: 95, fullMark: 100 },
-        { subject: 'PELE', A: 70, B: 90, fullMark: 100 },
-        { subject: 'ESTRUTURA ÓSSEA', A: 60, B: 98, fullMark: 100 },
-        { subject: 'TERÇO MÉDIO', A: 55, B: 92, fullMark: 100 },
-        { subject: 'PROPORÇÃO ÁUREA', A: 50, B: 96, fullMark: 100 },
+        { subject: 'SIMETRIA', A: result.grafico_radar?.simetria || 65, B: 95, fullMark: 100 },
+        { subject: 'PELE', A: result.grafico_radar?.pele || 70, B: 90, fullMark: 100 },
+        { subject: 'ESTRUTURA ÓSSEA', A: result.grafico_radar?.estrutura_ossea || 60, B: 98, fullMark: 100 },
+        { subject: 'TERÇO MÉDIO', A: result.grafico_radar?.terco_medio || 55, B: 92, fullMark: 100 },
+        { subject: 'PROPORÇÃO ÁUREA', A: result.grafico_radar?.proporcao_aurea || 50, B: 96, fullMark: 100 },
     ];
 
     const currentScore = result.analise_geral?.nota_final || 6.2;
@@ -150,7 +190,7 @@ export default function ResultsPage() {
                         ONDE ESTÃO SEUS <span className="text-primary">PONTOS CEGOS</span>
                     </h2>
 
-                    <div className="h-[400px] md:h-[500px] w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative">
+                    <div className="h-[400px] md:h-[500px] w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '400px' }}>
                         <ResponsiveContainer width="100%" height="100%">
                             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
@@ -209,8 +249,10 @@ export default function ResultsPage() {
                             <div className="flex items-center gap-3">
                                 <CheckCircle2 className="text-primary w-5 h-5" />
                                 <div>
-                                    <h4 className="font-bold text-white">Formato dos Olhos</h4>
-                                    <p className="text-sm text-gray-400">Amêndoa - Excelente simetria detectada.</p>
+                                    <h4 className="font-bold text-white">Formato do Rosto Detectado</h4>
+                                    <p className="text-sm text-gray-400">
+                                        {result?.rosto?.formato_rosto || "Analisando..."} - Análise Biométrica Concluída.
+                                    </p>
                                 </div>
                             </div>
                             <span className="text-xs font-mono bg-primary/20 text-primary px-2 py-1 rounded">GRÁTIS</span>
@@ -240,7 +282,7 @@ export default function ResultsPage() {
 
                 {/* ACTION SECTION */}
                 <div className="p-10 rounded-3xl bg-gradient-to-b from-gray-900 to-black border border-primary/30 text-center space-y-8 relative overflow-hidden group shadow-[0_0_50px_rgba(57,255,20,0.1)]">
-                    <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 mix-blend-overlay" />
+                    <div className="absolute inset-0 opacity-5 mix-blend-overlay" />
 
                     <div className="space-y-4 relative z-10">
                         <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
@@ -269,6 +311,7 @@ export default function ResultsPage() {
 
                     <div className="flex flex-col items-center gap-6 relative z-10">
                         <Button
+                            type="button"
                             size="lg"
                             className="w-full md:w-auto px-12 h-24 text-xl md:text-2xl font-black uppercase tracking-widest animate-pulse shadow-[0_0_60px_rgba(57,255,20,0.4)] hover:shadow-[0_0_100px_rgba(57,255,20,0.6)] hover:scale-105 transition-all duration-300 border-2 border-primary bg-black text-primary hover:bg-primary hover:text-black"
                             onClick={handleCheckout}

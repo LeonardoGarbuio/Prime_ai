@@ -50,10 +50,15 @@ export default function AnalyzingPage() {
                 body: JSON.stringify({ faceImage, bodyImage }),
             })
                 .then(async (res) => {
-                    if (!res.ok) throw new Error("Analysis failed");
+                    if (!res.ok) {
+                        const errorText = await res.text();
+                        console.error("API Error Response:", errorText); // DEBUG
+                        throw new Error(`Analysis failed: ${res.status} ${res.statusText} - ${errorText}`);
+                    }
                     return res.json();
                 })
                 .then((data) => {
+                    console.log("API Response Data:", data); // DEBUG
                     localStorage.setItem("analysisResult", JSON.stringify(data));
                     return data;
                 });
