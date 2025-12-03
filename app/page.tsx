@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/Button";
 import { ArrowRight, ScanLine, ShieldCheck, Zap } from "lucide-react";
 
 export default function Home() {
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+
   return (
     <main className="min-h-screen bg-black text-white selection:bg-primary selection:text-black">
       <Navbar />
@@ -22,23 +27,35 @@ export default function Home() {
             IA DE ANÁLISE ESTÉTICA AVANÇADA
           </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-tight mb-8">
             DESCUBRA O QUÃO LONGE <br />
             VOCÊ ESTÁ DO SEU <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">PRIME</span>
           </h1>
 
-          <p className="max-w-2xl mx-auto text-lg text-gray-400 md:text-xl">
-            A inteligência artificial que julga sua simetria, detecta falhas e cria
-            o plano exato para você atingir seu potencial genético máximo.
-          </p>
-
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/scan">
-              <Button size="lg" className="group text-lg h-16 px-12">
+          <div className="flex flex-col items-center gap-4">
+            <Link href={acceptedPrivacy ? "/scan" : "#"}>
+              <Button
+                size="lg"
+                className={`group text-lg h-16 px-12 transition-all duration-300 ${!acceptedPrivacy ? 'opacity-50 pointer-events-none' : ''}`}
+                disabled={!acceptedPrivacy}
+              >
                 ESCANEAR AGORA
                 <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
               </Button>
             </Link>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="privacy"
+                className="w-4 h-4 rounded border-gray-600 text-primary focus:ring-primary bg-black"
+                checked={acceptedPrivacy}
+                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+              />
+              <label htmlFor="privacy" className="text-xs text-gray-400 cursor-pointer select-none">
+                Li e concordo com os Termos de Uso e Política de Privacidade.
+              </label>
+            </div>
           </div>
 
           <p className="text-xs text-gray-600 font-mono">

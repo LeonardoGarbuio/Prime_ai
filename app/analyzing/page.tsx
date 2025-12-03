@@ -7,13 +7,11 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { BrainCircuit, ScanFace, Activity, CheckCircle2 } from "lucide-react";
 
 const STEPS = [
-    { label: "Conectando à Rede Neural Vision...", duration: 2000, icon: BrainCircuit },
-    { label: "Mapeando 68 Pontos Faciais...", duration: 3000, icon: ScanFace },
-    { label: "Detectando Assimetrias Mandibulares...", duration: 3000, icon: Activity },
-    { label: "Analisando Textura da Pele e Poros...", duration: 3000, icon: ScanFace },
-    { label: "Calculando Proporção Áurea...", duration: 3000, icon: Activity },
-    { label: "Comparando com Banco de Dados Genético...", duration: 2500, icon: BrainCircuit },
-    { label: "Gerando Relatório Final...", duration: 2000, icon: CheckCircle2 },
+    { label: "Mapeando 120 pontos faciais...", duration: 1500, icon: ScanFace },
+    { label: "Calculando Proporção Áurea...", duration: 1500, icon: BrainCircuit },
+    { label: "Analisando textura da pele...", duration: 1500, icon: Activity },
+    { label: "Detectando assimetria mandibular...", duration: 1500, icon: ScanFace },
+    { label: "Gerando Dossiê Prime AI...", duration: 1000, icon: CheckCircle2 },
 ];
 
 export default function AnalyzingPage() {
@@ -130,11 +128,11 @@ export default function AnalyzingPage() {
                                 <div
                                     key={i}
                                     className={`flex items-center gap-3 text-xs md:text-sm transition-colors duration-500 ${i < currentStep ? "text-primary" :
-                                            i === currentStep ? "text-white font-bold" : "text-gray-600"
+                                        i === currentStep ? "text-white font-bold" : "text-gray-600"
                                         }`}
                                 >
                                     <div className={`w-1.5 h-1.5 rounded-full ${i < currentStep ? "bg-primary" :
-                                            i === currentStep ? "bg-white animate-pulse" : "bg-gray-800"
+                                        i === currentStep ? "bg-white animate-pulse" : "bg-gray-800"
                                         }`} />
                                     <span className="font-mono uppercase">{step.label}</span>
                                     {i < currentStep && <CheckCircle2 className="w-3 h-3 ml-auto" />}
