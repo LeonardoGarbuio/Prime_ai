@@ -34,18 +34,7 @@ export default function Home() {
           </h1>
 
           <div className="flex flex-col items-center gap-4">
-            <Link href={acceptedPrivacy ? "/scan" : "#"}>
-              <Button
-                size="lg"
-                className={`group text-lg h-16 px-12 transition-all duration-300 ${!acceptedPrivacy ? 'opacity-50 pointer-events-none' : ''}`}
-                disabled={!acceptedPrivacy}
-              >
-                ESCANEAR AGORA
-                <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
-              </Button>
-            </Link>
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-4">
               <input
                 type="checkbox"
                 id="privacy"
@@ -57,6 +46,17 @@ export default function Home() {
                 Li e concordo com os Termos de Uso e Política de Privacidade.
               </label>
             </div>
+
+            <Link href={acceptedPrivacy ? "/scan" : "#"}>
+              <Button
+                size="lg"
+                className={`group text-lg h-16 px-12 transition-all duration-300 ${!acceptedPrivacy ? 'opacity-50 pointer-events-none' : ''}`}
+                disabled={!acceptedPrivacy}
+              >
+                ESCANEAR AGORA
+                <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
+              </Button>
+            </Link>
           </div>
 
           <p className="text-xs text-gray-600 font-mono">

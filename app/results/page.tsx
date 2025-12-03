@@ -38,7 +38,7 @@ export default function ResultsPage() {
     }, []);
 
     const handleCheckout = () => {
-        window.location.href = "/checkout";
+        window.location.href = "https://pay.kiwify.com.br/Ji56d15";
     };
 
     if (!result) {
