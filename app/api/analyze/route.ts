@@ -7,11 +7,11 @@ export async function POST(req: Request) {
     if (!apiKey) {
         console.error("❌ ERRO CRÍTICO: GOOGLE_API_KEY não encontrada.");
         return NextResponse.json(
-            { error: "Configuração de servidor inválida. Chave de API não encontrada." }, 
+            { error: "Configuração de servidor inválida. Chave de API não encontrada." },
             { status: 500 }
         );
     }
-    
+
     try {
         const { faceImage, bodyImage } = await req.json();
 
@@ -24,17 +24,17 @@ export async function POST(req: Request) {
         // --- PASSO 1: AUTODESCOBERTA DE MODELO ---
         // Isso evita o erro 404 se um modelo específico não estiver ativo na conta
         console.log("🔍 PRIME AI: Conectando ao Google...");
-        
+
         const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
         const listResp = await fetch(listUrl);
 
         if (!listResp.ok) {
             const errorBody = await listResp.json().catch(() => ({}));
             console.error("❌ ERRO DE CONEXÃO:", JSON.stringify(errorBody, null, 2));
-            
+
             if (listResp.status === 403) throw new Error("Chave de API Bloqueada/Inválida (Forbidden).");
             if (listResp.status === 400) throw new Error("Chave de API Inválida (Bad Request).");
-            
+
             throw new Error(`Erro API Google: ${listResp.status} - ${errorBody.error?.message || "Sem detalhes"}`);
         }
 
@@ -61,6 +61,10 @@ export async function POST(req: Request) {
         const promptText = `
         ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Cirurgia Plástica Estética.
         TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
+
+        🚨 SEGURANÇA (DOG TEST):
+        SE A IMAGEM NÃO FOR UM ROSTO HUMANO NÍTIDO (ex: cachorro, gato, objeto, desenho):
+        Retorne IMEDIATAMENTE um JSON com "erro_leitura": true e "resumo_brutal": "Face humana não detectada. Envie uma foto nítida.". NÃO INVENTE DADOS.
 
         DIRETRIZES DE ANÁLISE PROFUNDA (Chain of Thought):
         1. **Mapeamento de Landmarks:** Localize mentalmente Trichion, Glabella, Menton, Zigomas e Gonions.
@@ -137,10 +141,10 @@ export async function POST(req: Request) {
         if (!genResp.ok) {
             const errorBody = await genResp.json().catch(() => ({}));
             console.error("❌ ERRO NA GERAÇÃO:", JSON.stringify(errorBody, null, 2));
-            
+
             if (genResp.status === 403) throw new Error("Chave Bloqueada durante a geração (Forbidden).");
             if (genResp.status === 429) throw new Error("Muitas requisições (Quota Exceeded). Espere um pouco.");
-            
+
             throw new Error(`Erro IA (${genResp.status}): ${errorBody.error?.message || genResp.statusText}`);
         }
 
@@ -148,25 +152,25 @@ export async function POST(req: Request) {
         const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        
+
         if (!jsonMatch) {
             console.error("IA respondeu texto sem JSON:", rawText);
             throw new Error("Formato inválido.");
         }
 
-        const cleanJson = jsonMatch[0]; 
+        const cleanJson = jsonMatch[0];
         console.log("📝 JSON Extraído com Sucesso.");
-        
+
         return NextResponse.json(JSON.parse(cleanJson));
 
     } catch (error: any) {
         console.error("❌ ERRO:", error.message);
-        return NextResponse.json({ 
-            error: "Erro de Processamento", 
+        return NextResponse.json({
+            error: "Erro de Processamento",
             details: error.message,
             analise_geral: { nota_final: 7.0, resumo_brutal: "Erro técnico. Verifique se o arquivo .env está correto." },
             rosto: { formato_rosto: "Oval" },
-            erro_leitura: true 
+            erro_leitura: true
         }, { status: 500 });
     }
 }

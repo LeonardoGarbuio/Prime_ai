@@ -60,7 +60,8 @@ export default function Home() {
           </div>
 
           <p className="text-xs text-gray-600 font-mono">
-            ANÁLISE CRIPTOGRAFADA • 100% PRIVADO • RESULTADO EM 30S
+            ANÁLISE CRIPTOGRAFADA • 100% PRIVADO • RESULTADO EM 30S <br />
+            *Resultados baseados em geometria. Podem variar conforme iluminação.
           </p>
         </div>
       </section>

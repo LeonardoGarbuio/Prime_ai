@@ -1,15 +1,37 @@
-import Link from "next/link";
+import React from 'react';
+import Link from 'next/link';
 
 export function Footer() {
     return (
-        <footer className="py-8 px-4 border-t border-white/5 bg-black text-center relative z-10">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 text-xs text-gray-500 font-mono">
-                <span>&copy; 2024 PRIME AI</span>
-                <span className="hidden md:inline">|</span>
-                <div className="flex gap-4">
-                    <Link href="/terms" className="hover:text-primary transition-colors">Termos de Uso</Link>
-                    <Link href="/privacy" className="hover:text-primary transition-colors">Política de Privacidade</Link>
-                    <a href="mailto:contato@primeai.com" className="hover:text-primary transition-colors">Contato / Suporte</a>
+        <footer className="bg-black text-gray-500 py-10 border-t border-gray-900 text-sm">
+            <div className="container mx-auto px-4">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+
+                    {/* Lado Esquerdo: Marca e Copyright */}
+                    <div className="text-center md:text-left">
+                        <h3 className="text-white font-bold text-lg tracking-wider mb-2">PRIME AI</h3>
+                        <p>© {new Date().getFullYear()} Todos os direitos reservados.</p>
+                    </div>
+
+                    {/* Centro: Links Legais (Obrigatórios) */}
+                    <div className="flex gap-6 font-medium">
+                        <Link href="/terms" className="hover:text-green-400 transition-colors">
+                            Termos de Uso
+                        </Link>
+                        <Link href="/privacy" className="hover:text-green-400 transition-colors">
+                            Privacidade
+                        </Link>
+                    </div>
+
+                    {/* Lado Direito: Dados Fiscais (Lei do E-commerce) */}
+                    <div className="text-center md:text-right text-xs text-gray-600">
+                        <p>Operado por: Leonardo Garbuio Cavalheiro</p>
+                        <p>CPF: 142.904.289-32 • Contato: suporte@primeai.com</p>
+                        <p className="mt-2 text-[10px] opacity-60">
+                            Este site não possui vínculo com o Facebook, Instagram ou TikTok.
+                        </p>
+                    </div>
+
                 </div>
             </div>
         </footer>
