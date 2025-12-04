@@ -26,7 +26,7 @@ export function Footer() {
                     {/* Lado Direito: Dados Fiscais (Lei do E-commerce) */}
                     <div className="text-center md:text-right text-xs text-gray-600">
                         <p>Operado por: Leonardo Garbuio Cavalheiro</p>
-                        <p>CPF: 142.904.289-32 • Contato: suporte@primeai.com</p>
+                        <p>CPF: 142.904.289-32 • Contato: leonardogarbuiocavalheiro@gmail.com</p>
                         <p className="mt-2 text-[10px] opacity-60">
                             Este site não possui vínculo com o Facebook, Instagram ou TikTok.
                         </p>
