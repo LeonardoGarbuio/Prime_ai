@@ -92,14 +92,14 @@ export default function ResultsPage() {
     // Data for Radar Chart
     const radarData = [
         { subject: 'SIMETRIA', A: result.grafico_radar?.simetria || 65, B: 95, fullMark: 100 },
-        { subject: 'PELE', A: result.grafico_radar?.pele || 70, B: 90, fullMark: 100 },
+        { subject: 'PELE', A: result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 70, B: 90, fullMark: 100 },
         { subject: 'ESTRUTURA ÓSSEA', A: result.grafico_radar?.estrutura_ossea || 60, B: 98, fullMark: 100 },
-        { subject: 'TERÇO MÉDIO', A: result.grafico_radar?.terco_medio || 55, B: 92, fullMark: 100 },
+        { subject: 'HARMONIA', A: result.grafico_radar?.harmonia_facial || result.grafico_radar?.terco_medio || 55, B: 92, fullMark: 100 },
         { subject: 'PROPORÇÃO ÁUREA', A: result.grafico_radar?.proporcao_aurea || 50, B: 96, fullMark: 100 },
     ];
 
     const currentScore = result.analise_geral?.nota_final || 6.2;
-    const potentialScore = 9.4;
+    const potentialScore = Math.min(10.0, result.analise_geral?.nota_potencial || (currentScore + 1.5));
     const gap = (potentialScore - currentScore).toFixed(1);
 
     return (
@@ -233,6 +233,94 @@ export default function ResultsPage() {
                                 <div className="w-3 h-3 bg-primary/20 border border-primary border-dashed rounded-full" />
                                 <span className="text-primary font-bold">Potencial Genético</span>
                             </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* SHARE CARD SECTION (VIRAL) */}
+                <section className="space-y-8">
+                    <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
+                        SEU <span className="text-primary">ARQUÉTIPO</span>
+                    </h2>
+
+                    <div className="relative max-w-sm mx-auto group cursor-pointer" onClick={() => alert("Tire um print para compartilhar!")}>
+                        {/* Card Container */}
+                        <div className="relative overflow-hidden rounded-3xl bg-black border border-white/10 shadow-[0_0_40px_rgba(57,255,20,0.1)] aspect-[9/16]">
+
+                            {/* Background Image (Blurred User Photo) */}
+                            {localStorage.getItem("faceImage") && (
+                                <div className="absolute inset-0 z-0">
+                                    <img
+                                        src={localStorage.getItem("faceImage")!}
+                                        alt="User Background"
+                                        className="w-full h-full object-cover opacity-40 blur-xl scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                                </div>
+                            )}
+
+                            {/* Content */}
+                            <div className="relative z-10 h-full flex flex-col justify-between p-8">
+                                {/* Header */}
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                                            <span className="text-xs font-mono text-primary tracking-widest">PRIME AI ANALYTICS</span>
+                                        </div>
+                                        <h3 className="text-3xl font-black text-white italic uppercase leading-none">
+                                            {result.analise_geral?.arquetipo || "THE UNKNOWN"}
+                                        </h3>
+                                    </div>
+                                    <ScanFace className="w-8 h-8 text-white/50" />
+                                </div>
+
+                                {/* Silhouette / Center Visual */}
+                                <div className="flex-1 flex items-center justify-center">
+                                    <div className="relative w-48 h-48">
+                                        <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse" />
+                                        {localStorage.getItem("faceImage") ? (
+                                            <img
+                                                src={localStorage.getItem("faceImage")!}
+                                                className="w-full h-full object-cover rounded-full grayscale contrast-150 border-4 border-white/10 mix-blend-luminosity"
+                                                style={{ filter: 'brightness(0.7) contrast(1.5) grayscale(1)' }}
+                                            />
+                                        ) : (
+                                            <User className="w-full h-full text-white/20" />
+                                        )}
+                                        {/* Overlay Text */}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <span className="text-6xl font-black text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">
+                                                {currentScore}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Footer Stats */}
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md">
+                                            <p className="text-[10px] text-gray-400 uppercase">Potencial</p>
+                                            <p className="text-xl font-bold text-primary">{potentialScore}</p>
+                                        </div>
+                                        <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md">
+                                            <p className="text-[10px] text-gray-400 uppercase">Raridade</p>
+                                            <p className="text-xl font-bold text-white">TOP 5%</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="text-[10px] text-gray-500 font-mono">prime-ai.com • @prime.ai</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Share Hint */}
+                        <div className="absolute -bottom-10 left-0 right-0 text-center">
+                            <p className="text-sm text-gray-400 flex items-center justify-center gap-2 animate-bounce">
+                                <ArrowDown className="w-4 h-4" /> Tire um print para compartilhar
+                            </p>
                         </div>
                     </div>
                 </section>

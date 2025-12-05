@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { BrainCircuit, ScanFace, Activity, CheckCircle2 } from "lucide-react";
+import { detectFaceLandmarks, calculateFaceMetrics } from "@/utils/faceLandmarker";
 
 const STEPS = [
     { label: "Mapeando 120 pontos faciais...", duration: 1500, icon: ScanFace },
@@ -19,6 +20,10 @@ export default function AnalyzingPage() {
     const [currentStep, setCurrentStep] = useState(0);
     const [progress, setProgress] = useState(0);
     const [userImage, setUserImage] = useState<string | null>(null);
+
+
+
+    // ... imports
 
     useEffect(() => {
         const analyzeImages = async () => {
@@ -36,37 +41,53 @@ export default function AnalyzingPage() {
             const animationPromise = new Promise<void>(async (resolve) => {
                 for (let i = 0; i < STEPS.length; i++) {
                     setCurrentStep(i);
-                    // Update progress based on step index
                     setProgress(Math.round(((i + 1) / STEPS.length) * 90));
                     await new Promise(r => setTimeout(r, STEPS[i].duration));
                 }
                 resolve();
             });
 
+            // MediaPipe Analysis
+            let metrics = null;
+            try {
+                console.log("🔍 Starting MediaPipe Analysis...");
+                const img = new Image();
+                img.src = faceImage;
+                await new Promise((resolve) => (img.onload = resolve));
+
+                const landmarks = await detectFaceLandmarks(img);
+                if (landmarks) {
+                    metrics = calculateFaceMetrics(landmarks);
+                    console.log("✅ MediaPipe Metrics:", metrics);
+                } else {
+                    console.warn("⚠️ No landmarks detected by MediaPipe");
+                }
+            } catch (e) {
+                console.error("❌ MediaPipe Error:", e);
+            }
+
             // API Call Promise
             const apiPromise = fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ faceImage, bodyImage }),
+                body: JSON.stringify({ faceImage, bodyImage, metrics }), // Sending metrics!
             })
                 .then(async (res) => {
                     if (!res.ok) {
                         const errorText = await res.text();
-                        console.error("API Error Response:", errorText); // DEBUG
+                        console.error("API Error Response:", errorText);
                         throw new Error(`Analysis failed: ${res.status} ${res.statusText} - ${errorText}`);
                     }
                     return res.json();
                 })
                 .then((data) => {
-                    console.log("API Response Data:", data); // DEBUG
+                    console.log("API Response Data:", data);
                     localStorage.setItem("analysisResult", JSON.stringify(data));
                     return data;
                 });
 
             try {
-                // Wait for BOTH to finish
                 await Promise.all([animationPromise, apiPromise]);
-
                 setProgress(100);
                 setTimeout(() => router.push("/results"), 500);
             } catch (error) {
