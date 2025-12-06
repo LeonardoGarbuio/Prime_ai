@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
         if (mode === "stylist") {
             promptText = `
-            ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Cirurgia Plástica E Personal Stylist de Celebridades.
+            ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Estética e Imagem Pessoal.
             CONTEXTO DO USUÁRIO: "${userContext || 'Análise de look do dia'}"
             
             TAREFA: Realizar uma análise COMPLETA (Forense + Estilo).
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
                 "rosto": { 
                     "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
                     "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "falhas_criticas": ["Assimetria 1", "Falha 2"], 
+                    "pontos_de_atencao": ["Assimetria 1", "Ponto 2"], 
                     "analise_pele": "Análise dermatológica detalhada." 
                 },
                 "grafico_radar": { 
@@ -128,10 +128,10 @@ export async function POST(req: Request) {
                     "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.", 
                     "gordura_estimada": "Baixa" | "Média" | "Alta" 
                 },
-                "plano_correcao": { 
-                    "passo_1_imediato": "Correção visual imediata", 
-                    "passo_2_rotina": "Protocolo de skincare ou hábito", 
-                    "passo_3_longo_prazo": "Intervenção estética sugerida" 
+                "plano_harmonizacao": { 
+                    "passo_1_imediato": "Harmonização visual imediata", 
+                    "passo_2_rotina": "Protocolo de cuidados ou hábito", 
+                    "passo_3_longo_prazo": "Sugestão estética (não invasiva)" 
                 },
                 "analise_cromatica": {
                     "estacao": "Inverno Brilhante | Outono Escuro | Verão Suave | etc",
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
         } else {
             // === MODO FORENSE (PADRÃO) ===
             promptText = `
-            ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Cirurgia Plástica Estética.
+            ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Estética.
             TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
 
             ${metricsContext}
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
                 "rosto": { 
                     "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
                     "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "falhas_criticas": ["Assimetria 1", "Falha 2"], 
+                    "pontos_de_atencao": ["Assimetria 1", "Ponto 2"], 
                     "analise_pele": "Análise dermatológica detalhada." 
                 },
                 "grafico_radar": { 
@@ -195,10 +195,10 @@ export async function POST(req: Request) {
                     "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.", 
                     "gordura_estimada": "Baixa" | "Média" | "Alta" 
                 },
-                 "plano_correcao": { 
-                    "passo_1_imediato": "Correção visual imediata", 
-                    "passo_2_rotina": "Protocolo de skincare ou hábito", 
-                    "passo_3_longo_prazo": "Intervenção estética sugerida" 
+                 "plano_harmonizacao": { 
+                    "passo_1_imediato": "Harmonização visual imediata", 
+                    "passo_2_rotina": "Protocolo de cuidados ou hábito", 
+                    "passo_3_longo_prazo": "Sugestão estética" 
                 }
             }`;
         }
@@ -296,7 +296,7 @@ export async function POST(req: Request) {
                 rosto: {
                     formato_rosto: shape,
                     pontos_fortes: ["Simetria Estrutural", "Proporção de Terços", "Definição Mandibular"],
-                    falhas_criticas: ["Leve assimetria ocular", "Ângulo gonial suave"],
+                    pontos_de_atencao: ["Leve assimetria ocular", "Ângulo gonial suave"],
                     analise_pele: "Textura uniforme detectada na análise preliminar."
                 },
                 grafico_radar: {
@@ -310,7 +310,7 @@ export async function POST(req: Request) {
                     analise: "Apenas rosto visível.",
                     gordura_estimada: "Média"
                 },
-                plano_correcao: {
+                plano_harmonizacao: {
                     passo_1_imediato: "Melhorar iluminação para fotos",
                     passo_2_rotina: "Skincare focado em hidratação",
                     passo_3_longo_prazo: "Consultoria de visagismo completa"

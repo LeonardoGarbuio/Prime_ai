@@ -480,7 +480,7 @@ export default function VipScannerPage() {
                                 {/* Formato do Rosto */}
                                 <div className="bg-white/5 border border-primary/30 p-4 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <CheckCircle2 className="text-primary w-5 h-5" />
+                                        <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
                                         <div>
                                             <h4 className="font-bold text-white">Formato do Rosto Detectado</h4>
                                             <p className="text-sm text-gray-400">
@@ -494,10 +494,10 @@ export default function VipScannerPage() {
                                 {/* UNLOCKED ITEMS */}
                                 <div className="bg-white/5 border border-red-500/30 p-4 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <XCircle className="text-red-500 w-5 h-5" />
+                                        <XCircle className="text-red-500 w-5 h-5 shrink-0" />
                                         <div>
-                                            <h4 className="font-bold text-white">Falhas Críticas</h4>
-                                            <p className="text-sm text-gray-400">{result.rosto?.falhas_criticas?.[0] || "Nenhuma falha crítica maior detectada."}</p>
+                                            <h4 className="font-bold text-white">Pontos de Atenção</h4>
+                                            <p className="text-sm text-gray-400">{result.rosto?.pontos_de_atencao?.[0] || result.rosto?.falhas_criticas?.[0] || "Nenhum ponto maior detectado."}</p>
                                         </div>
                                     </div>
                                     <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
@@ -505,10 +505,10 @@ export default function VipScannerPage() {
 
                                 <div className="bg-white/5 border border-yellow-500/30 p-4 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <Star className="text-yellow-500 w-5 h-5" />
+                                        <Star className="text-yellow-500 w-5 h-5 shrink-0" />
                                         <div>
-                                            <h4 className="font-bold text-white">Sugestão de Maquiagem/Correção</h4>
-                                            <p className="text-sm text-gray-400">{result.sugestao_imediata?.produto_chave || result.plano_correcao?.passo_1_imediato}</p>
+                                            <h4 className="font-bold text-white">Realce Estratégico</h4>
+                                            <p className="text-sm text-gray-400">{result.sugestao_imediata?.produto_chave || result.plano_harmonizacao?.passo_1_imediato || result.plano_correcao?.passo_1_imediato}</p>
                                         </div>
                                     </div>
                                     <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
@@ -516,10 +516,10 @@ export default function VipScannerPage() {
 
                                 <div className="bg-white/5 border border-blue-500/30 p-4 rounded-xl flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <User className="text-blue-500 w-5 h-5" />
+                                        <User className="text-blue-500 w-5 h-5 shrink-0" />
                                         <div>
-                                            <h4 className="font-bold text-white">Plano de Longo Prazo</h4>
-                                            <p className="text-sm text-gray-400">{result.plano_correcao?.passo_3_longo_prazo || "Manter rotina de cuidados."}</p>
+                                            <h4 className="font-bold text-white">Harmonização Geral</h4>
+                                            <p className="text-sm text-gray-400">{result.plano_harmonizacao?.passo_3_longo_prazo || result.plano_correcao?.passo_3_longo_prazo || "Manter rotina de cuidados."}</p>
                                         </div>
                                     </div>
                                     <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
@@ -732,6 +732,13 @@ export default function VipScannerPage() {
                                 </div>
                             </div>
                         </section>
+
+                        {/* LEGAL DISCLAIMER */}
+                        <div className="text-center pb-8 opacity-40 hover:opacity-100 transition-opacity">
+                            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-mono">
+                                Nota Legal: Análise baseada em visagismo e geometria. Não substitui aconselhamento médico.
+                            </p>
+                        </div>
 
                     </div>
                 )}
