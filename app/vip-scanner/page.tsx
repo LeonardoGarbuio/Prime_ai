@@ -7,7 +7,8 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import {
     Lock, Crown, Sparkles, AlertTriangle, CheckCircle2, Zap,
-    ScanFace, User, ArrowUp, ArrowDown, Star, XCircle
+    ScanFace, User, ArrowUp, ArrowDown, Star, XCircle,
+    Palette, Shirt, ShoppingBag, Ban, Glasses
 } from 'lucide-react';
 import {
     Radar,
@@ -583,39 +584,151 @@ export default function VipScannerPage() {
                         {/* 1. STYLIST SECTION (Moved to Bottom) */}
                         <section className="space-y-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wider border-l-4 border-yellow-500 pl-4">
-                                CONSULTORIA DE ESTILO
+                                CONSULTORIA DE ESTILO <span className="text-yellow-500 text-base align-middle ml-2 border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 rounded-full">PREMIUM</span>
                             </h2>
-                            <div className="relative p-8 rounded-3xl bg-gray-900/80 border border-yellow-500/30 backdrop-blur-xl overflow-hidden">
+
+                            {/* SCORE & VIBE CARD */}
+                            <div className="relative p-8 rounded-3xl bg-gray-900/80 border border-yellow-500/30 backdrop-blur-xl overflow-hidden transition-all hover:bg-gray-900/90 hover:shadow-[0_0_50px_rgba(234,179,8,0.15)]">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/10 blur-[80px] rounded-full pointer-events-none" />
 
                                 <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 border-b border-white/10 pb-8 mb-8">
-                                    <div className="text-center">
-                                        <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2">Nota do Look</p>
-                                        <div className="text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-yellow-300 to-yellow-600">
+                                    <div className="text-center group cursor-default">
+                                        <p className="text-gray-400 text-xs uppercase tracking-[0.2em] mb-2 group-hover:text-yellow-500 transition-colors">Nota do Look</p>
+                                        <div className="text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-yellow-300 to-yellow-600 drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]">
                                             {typeof result.analise_geral?.nota_final === 'number'
                                                 ? result.analise_geral.nota_final.toFixed(1)
                                                 : result.analise_geral?.nota_final || "8.5"}
                                         </div>
                                     </div>
                                     <div className="flex-1 text-center md:text-left">
-                                        <h3 className="text-2xl font-bold text-white mb-2">Vibe: {result.feedback_rapido?.vibe_transmitida}</h3>
+                                        <h3 className="text-2xl font-bold text-white mb-2">Vibe: <span className="text-yellow-100">{result.feedback_rapido?.vibe_transmitida}</span></h3>
                                         <p className="text-gray-400 text-sm">{result.analise_geral?.resumo_brutal}</p>
                                     </div>
                                 </div>
 
                                 <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="p-5 rounded-2xl bg-green-500/10 border border-green-500/20">
-                                        <h3 className="flex items-center gap-2 text-green-400 font-bold mb-2">
+                                    <div className="p-5 rounded-2xl bg-green-500/5 border border-green-500/20 hover:bg-green-500/10 transition-colors">
+                                        <h3 className="flex items-center gap-2 text-green-400 font-bold mb-2 uppercase text-xs tracking-wider">
                                             <CheckCircle2 className="w-5 h-5" /> O que funcionou
                                         </h3>
                                         <p className="text-gray-300 text-sm leading-relaxed">{result.feedback_rapido?.o_que_funcionou}</p>
                                     </div>
-                                    <div className="p-5 rounded-2xl bg-red-500/10 border border-red-500/20">
-                                        <h3 className="flex items-center gap-2 text-red-400 font-bold mb-2">
+                                    <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/20 hover:bg-red-500/10 transition-colors">
+                                        <h3 className="flex items-center gap-2 text-red-400 font-bold mb-2 uppercase text-xs tracking-wider">
                                             <AlertTriangle className="w-5 h-5" /> Atenção aos detalhes
                                         </h3>
                                         <p className="text-gray-300 text-sm leading-relaxed">{result.feedback_rapido?.o_que_matou_o_look}</p>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* NEW: COLOR ANALYSIS & WARDROBE */}
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {/* CARTELA DE CORES */}
+                                <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-white/20 transition-all">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full pointer-events-none" />
+
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+                                            <Palette className="w-5 h-5 text-purple-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="tex-lg font-bold text-white">Análise Cromática</h3>
+                                            <p className="text-xs text-purple-300/70">Sua paleta ideal</p>
+                                        </div>
+                                    </div>
+
+                                    {result.analise_cromatica ? (
+                                        <div className="space-y-6">
+                                            <div>
+                                                <h4 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-indigo-400">
+                                                    {result.analise_cromatica.estacao}
+                                                </h4>
+                                                <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                                                    {result.analise_cromatica.descricao}
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Cores Poderosas</span>
+                                                <div className="flex gap-2">
+                                                    {result.analise_cromatica.paleta_ideal?.map((color: string, i: number) => (
+                                                        <div key={i} className="group/color relative">
+                                                            <div
+                                                                className="w-10 h-10 rounded-full border border-white/10 shadow-lg cursor-pointer hover:scale-110 transition-transform"
+                                                                style={{ backgroundColor: color }}
+                                                            />
+                                                            <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[8px] bg-black px-1 rounded opacity-0 group-hover/color:opacity-100 transition-opacity whitespace-nowrap text-gray-400">
+                                                                {color}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="h-32 flex items-center justify-center text-gray-600 text-sm italic">
+                                            Execute uma nova análise para liberar...
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* GUIA DE VESTUÁRIO */}
+                                <div className="bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 relative overflow-hidden hover:border-white/20 transition-all">
+                                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 blur-[50px] rounded-full pointer-events-none" />
+
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center border border-blue-500/30">
+                                            <Shirt className="w-5 h-5 text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <h3 className="tex-lg font-bold text-white">Guia de Estilo</h3>
+                                            <p className="text-xs text-blue-300/70">O que vestir agora</p>
+                                        </div>
+                                    </div>
+
+                                    {result.guia_vestuario ? (
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-blue-300/80 text-xs font-bold uppercase tracking-wider">
+                                                    <ShoppingBag className="w-3 h-3" /> Peças Chave
+                                                </div>
+                                                <ul className="text-sm text-gray-300 space-y-1 ml-1">
+                                                    {result.guia_vestuario.pecas_chave?.map((item: string, i: number) => (
+                                                        <li key={i} className="flex items-start gap-2">
+                                                            <span className="text-blue-500 mt-1.5">•</span> {item}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+
+                                            {result.guia_vestuario.acessorios && (
+                                                <div className="pt-2 border-t border-white/5">
+                                                    <div className="flex items-center gap-2 text-amber-300/80 text-xs font-bold uppercase tracking-wider mb-1">
+                                                        <Glasses className="w-3 h-3" /> Acessórios
+                                                    </div>
+                                                    <p className="text-sm text-gray-300 leading-relaxed">
+                                                        {result.guia_vestuario.acessorios}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {result.guia_vestuario.evitar && (
+                                                <div className="pt-2 border-t border-white/5">
+                                                    <div className="flex items-center gap-2 text-red-400/80 text-xs font-bold uppercase tracking-wider mb-1">
+                                                        <Ban className="w-3 h-3" /> Evitar
+                                                    </div>
+                                                    <p className="text-xs text-gray-400 leading-relaxed">
+                                                        {result.guia_vestuario.evitar.join(", ")}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="h-32 flex items-center justify-center text-gray-600 text-sm italic">
+                                            Execute uma nova análise para liberar...
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </section>

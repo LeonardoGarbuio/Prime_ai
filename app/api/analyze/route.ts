@@ -25,48 +25,40 @@ export async function POST(req: Request) {
 
         const cleanBase64 = (str: string) => str.replace(/^data:image\/\w+;base64,/, "");
 
-        // --- PASSO 1: SELEÇÃO DE MODELO ROBUSTA (User's Logic) ---
-        console.log(`🔍 PRIME AI: Iniciando modo ${mode.toUpperCase()}...`);
+        // --- DEFINIÇÃO MANUAL DE MODELOS (OTIMIZADA) ---
+        // Lista fixa para evitar latência de listagem e garantir versões específicas (Safety Nets).
 
-        // Usamos uma conexão direta para listar modelos e evitar erros de versão do SDK
-        const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
-        const listResp = await fetch(listUrl);
+        let candidateModels: string[] = [];
 
-        if (!listResp.ok) {
-            const errorBody = await listResp.json().catch(() => ({}));
-            console.error("❌ ERRO DE CONEXÃO:", JSON.stringify(errorBody, null, 2));
-
-            if (listResp.status === 403) throw new Error("Chave de API Bloqueada/Inválida (Forbidden).");
-            if (listResp.status === 400) throw new Error("Chave de API Inválida (Bad Request).");
-
-            throw new Error(`Erro API Google: ${listResp.status} - ${errorBody.error?.message || "Sem detalhes"}`);
+        if (mode === "stylist") {
+            // Stylist: Foco em 2.0 Flash (Equilíbrio) e 2.0 Pro (Inteligência)
+            candidateModels = [
+                "models/gemini-2.0-flash-exp",     // Experimental (Pode ser instável, mas criativo)
+                "models/gemini-2.0-flash",         // Stable 2.0
+                "models/gemini-2.0-flash-lite",    // Rápido e Eficiente
+                "models/gemini-flash-latest",      // Alias seguro
+                "models/gemini-2.0-pro-exp"        // Mais inteligente de todos
+            ];
+        } else {
+            // Forensic: Foco em 2.0 Pro e precisão
+            candidateModels = [
+                "models/gemini-2.0-pro-exp",       // Melhor para raciocínio complexo
+                "models/gemini-2.0-flash",         // Backup Sólido
+                "models/gemini-2.0-flash-lite",    // Velocidade
+                "models/gemini-pro-latest",        // Alias seguro Pro
+                "models/gemini-2.0-flash-exp"
+            ];
         }
 
-        const listData = await listResp.json();
-        let models = listData.models || [];
+        console.log(`🎯 Modo: ${mode.toUpperCase()} | Fila:`, candidateModels.map(m => m.replace("models/", "")));
 
-        // Ordena para consistência
-        models.sort((a: any, b: any) => a.name.localeCompare(b.name));
+        // Remove duplicatas mantendo a ordem de prioridade
+        const uniqueCandidates = [...new Set(candidateModels)];
+        console.log("🧠 CÉREBROS DISPONÍVEIS:", uniqueCandidates);
 
-        // Lógica de seleção de modelo (Prioridade do Usuário)
-        let chosenModel = models.find((m: any) => m.name.includes("gemini-2.0-flash") && m.supportedGenerationMethods.includes("generateContent"))?.name;
-        if (!chosenModel) chosenModel = models.find((m: any) => m.name.includes("gemini-1.5-flash-001") && m.supportedGenerationMethods.includes("generateContent"))?.name;
-        if (!chosenModel) chosenModel = models.find((m: any) => m.name.includes("gemini-1.5-flash") && m.supportedGenerationMethods.includes("generateContent"))?.name;
-        if (!chosenModel) chosenModel = models.find((m: any) => m.name.includes("gemini-1.5-pro") && m.supportedGenerationMethods.includes("generateContent"))?.name;
-
-        if (!chosenModel) {
-            console.warn("⚡ NENHUM MODELO ENCONTRADO NA LISTA. Forçando Fallback Hardcoded.");
-            chosenModel = "models/gemini-1.5-flash";
-        }
-
-        console.log("✅ CÉREBRO ATIVO:", chosenModel);
-
-        const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${chosenModel}:generateContent?key=${apiKey}`;
-
-        // --- PASSO 2: SELEÇÃO DO PROMPT (O CÉREBRO DUPLO + FUZZY LOGIC) ---
+        // --- SELEÇÃO DO PROMPT (O CÉREBRO DUPLO + FUZZY LOGIC) ---
+        // (Preparando o Prompt UMA vez para usar em todos os modelos)
         let promptText = "";
-
-        // Se tivermos métricas do MediaPipe, injetamos para garantir precisão (Fuzzy Logic)
         let metricsContext = "";
         const hasDetailedMetrics = metrics && metrics.formato_rosto;
 
@@ -85,8 +77,15 @@ export async function POST(req: Request) {
             `;
         }
 
+        // ... (Prompt generation logic remains similar but simplified context here for brevity in replacement if needed, 
+        // OR we just keep existing prompt logic. To avoid deleting the prompt generation logic which is between lines 66-194, 
+        // I will focus this tool call ONLY on the loop logic if possible.
+        // BUT the prompt is needed INSIDE the payload which is constructed differently per request? 
+        // No, prompt is constant. Model URL changes.)
+
+        // Let's reconstruct the prompt setup here to ensure it's available for the loop.
+
         if (mode === "stylist") {
-            // === MODO STYLIST (VIP) ===
             promptText = `
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Cirurgia Plástica E Personal Stylist de Celebridades.
             CONTEXTO DO USUÁRIO: "${userContext || 'Análise de look do dia'}"
@@ -133,6 +132,16 @@ export async function POST(req: Request) {
                     "passo_1_imediato": "Correção visual imediata", 
                     "passo_2_rotina": "Protocolo de skincare ou hábito", 
                     "passo_3_longo_prazo": "Intervenção estética sugerida" 
+                },
+                "analise_cromatica": {
+                    "estacao": "Inverno Brilhante | Outono Escuro | Verão Suave | etc",
+                    "descricao": "Explicação breve do porquê desta estação baseada em pele/cabelo/olhos",
+                    "paleta_ideal": ["#HEX", "#HEX", "#HEX", "#HEX", "#HEX"]
+                },
+                "guia_vestuario": {
+                    "pecas_chave": ["Item 1 (ex: Jaqueta de Couro)", "Item 2 (ex: Camisa Gola V)"],
+                    "evitar": ["Item 1", "Estampa X"],
+                    "acessorios": "Sugestão específica (ex: Óculos aviador dourado)"
                 },
                 "feedback_rapido": {
                     "nota_do_look": (0-10 baseada na produção atual),
@@ -186,7 +195,7 @@ export async function POST(req: Request) {
                     "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.", 
                     "gordura_estimada": "Baixa" | "Média" | "Alta" 
                 },
-                "plano_correcao": { 
+                 "plano_correcao": { 
                     "passo_1_imediato": "Correção visual imediata", 
                     "passo_2_rotina": "Protocolo de skincare ou hábito", 
                     "passo_3_longo_prazo": "Intervenção estética sugerida" 
@@ -207,48 +216,58 @@ export async function POST(req: Request) {
 
         const requestBody = {
             contents: [{ parts: parts }],
-            generationConfig: {
-                temperature: mode === "stylist" ? 0.7 : 0.2, // Ajustado para 0.2 no forense (mais preciso)
-                seed: mode === "stylist" ? undefined : 42
-            }
+            // generationConfig será injetado dentro do loop para poder variar se necessário
         };
 
-        // --- EXECUÇÃO COM RETRY ROBUSTO (User's Logic) ---
+        // --- LOOP DE EXECUÇÃO (CASCATA) ---
         let genResp: Response | null = null;
         let lastError: any = null;
+        let usedModel = "";
 
-        // Tentar até 3 vezes em caso de sobrecarga (503/429)
-        for (let i = 0; i < 3; i++) {
+        if (uniqueCandidates.length === 0) {
+            throw new Error("Nenhum modelo disponível na API.");
+        }
+
+        for (const modelName of uniqueCandidates) {
+            console.log(`🤖 TENTANDO MODELO: ${modelName}...`);
+            const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`;
+
+            // Configura temperatura baseada no modelo? 
+            // Flash 2.0 é mais criativo, Pro é mais conservador.
+            // Vamos manter padronizado por enquanto.
+            const currentConfig = {
+                temperature: mode === "stylist" ? 0.7 : 0.2,
+                seed: mode === "stylist" ? undefined : 42
+            };
+
+            // Injeta config no body (clone para não alterar o original se precisasse)
+            const currentBody = { ...requestBody, generationConfig: currentConfig };
+
             try {
                 genResp = await fetch(generateUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(currentBody)
                 });
 
                 if (genResp.ok) {
+                    usedModel = modelName;
+                    console.log(`✅ SUCESSO com ${modelName}!`);
                     lastError = null;
-                    break;
+                    break; // Sai do loop se funcionar
                 }
 
                 const errorBody = await genResp.json().catch(() => ({}));
                 const errorMessage = errorBody.error?.message || genResp.statusText;
-                lastError = new Error(`Erro IA (${genResp.status}): ${errorMessage}`);
+                console.warn(`⚠️ FALHA em ${modelName} (${genResp.status}): ${errorMessage}`);
 
-                // Retry apenas em 503 (Service Unavailable) ou 429 (Too Many Requests)
-                if (genResp.status === 503 || genResp.status === 429) {
-                    console.warn(`⚠️ Tentativa ${i + 1} falhou (${genResp.status}). Retentando em ${2 * (i + 1)}s...`);
-                    await new Promise(r => setTimeout(r, 2000 * (i + 1)));
-                    continue;
-                }
+                // Se for erro 400 (Bad Request), o prompt pode estar ruim, então talvez não adiante mudar de modelo.
+                // Mas se for 429 (Quota) ou 503, TEMOS que mudar.
+                // Vamos continuar o loop de qualquer jeito.
 
-                // Erro fatal (400, 401, etc), não retentar
-                break;
-
-            } catch (e) {
+            } catch (e: any) {
+                console.warn(`⚠️ ERRO DE REDE em ${modelName}: ${e.message}`);
                 lastError = e;
-                console.warn(`⚠️ Erro de rede na tentativa ${i + 1}. Retentando...`);
-                await new Promise(r => setTimeout(r, 2000 * (i + 1)));
             }
         }
 
@@ -295,6 +314,16 @@ export async function POST(req: Request) {
                     passo_1_imediato: "Melhorar iluminação para fotos",
                     passo_2_rotina: "Skincare focado em hidratação",
                     passo_3_longo_prazo: "Consultoria de visagismo completa"
+                },
+                analise_cromatica: {
+                    estacao: "Inverno Frio",
+                    descricao: "Seu contraste natural pede cores profundas e frias para harmonizar.",
+                    paleta_ideal: ["#000000", "#1C39BB", "#ffffff", "#880E4F", "#212121"]
+                },
+                guia_vestuario: {
+                    pecas_chave: ["Blazer Estruturado Navy", "Camisa Branca Oxford", "Jaqueta de Couro Minimalista"],
+                    evitar: ["Tons terrosos apagados", "Estampas muito miúdas"],
+                    acessorios: "Metais prateados ou aço escovado. Óculos com armação preta ou tartaruga escuro."
                 },
                 feedback_rapido: {
                     nota_do_look: 8.5,
