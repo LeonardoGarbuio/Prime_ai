@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { BrainCircuit, ScanFace, Activity, CheckCircle2 } from "lucide-react";
-import { detectFaceLandmarks, calculateFaceMetrics } from "@/utils/faceLandmarker";
+import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
 
 const STEPS = [
     { label: "Mapeando 120 pontos faciais...", duration: 1500, icon: ScanFace },
@@ -26,6 +26,11 @@ export default function AnalyzingPage() {
     // ... imports
 
     const analyzingRef = useRef(false);
+
+    // Initialize MediaPipe on mount
+    useEffect(() => {
+        initializeFaceLandmarker();
+    }, []);
 
     useEffect(() => {
         const analyzeImages = async () => {
@@ -66,7 +71,10 @@ export default function AnalyzingPage() {
                 const landmarks = await detectFaceLandmarks(img);
                 if (landmarks) {
                     metrics = calculateFaceMetrics(landmarks);
+                    const beautyScore = calculateBeautyScore(landmarks);
+                    metrics = { ...metrics, beauty_score: beautyScore }; // Inject score into metrics
                     console.log("✅ MediaPipe Metrics:", metrics);
+                    console.log("✨ Deterministic Beauty Score:", beautyScore);
                 } else {
                     console.warn("⚠️ No landmarks detected by MediaPipe");
                 }

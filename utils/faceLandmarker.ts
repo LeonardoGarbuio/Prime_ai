@@ -1,4 +1,4 @@
-// faceLandmarker.ts - V8 BALANCEADA
+// faceLandmarker.ts - VERSÃO CORRIGIDA V4
 
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
 
@@ -56,7 +56,6 @@ export async function detectFaceLandmarks(imageElement: HTMLImageElement): Promi
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const LM = {
-    GLABELA: 9,
     TOPO: 10,
     QUEIXO: 152,
     TESTA_ESQ: 70,
@@ -69,6 +68,8 @@ const LM = {
     GONION_DIR: 397,
     QUEIXO_ESQ: 176,
     QUEIXO_DIR: 400,
+    GLABELA: 9,
+    BASE_NARIZ: 2,
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -77,12 +78,15 @@ const LM = {
 
 interface Ponto { x: number; y: number; z: number; }
 
-type FormatoRosto = 'OVAL' | 'REDONDO' | 'QUADRADO' | 'RETANGULAR' | 'CORACAO' | 'DIAMANTE';
+type FormatoRosto =
+    'OVAL' | 'REDONDO' | 'QUADRADO' | 'RETANGULAR' |
+    'CORACAO' | 'TRIANGULAR' | 'TRIANGULAR_INVERTIDO' |
+    'DIAMANTE' | 'OBLONGO';
 
 type TipoMandibula = 'MUITO_ANGULAR' | 'ANGULAR' | 'MODERADO' | 'SUAVE' | 'MUITO_SUAVE';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// UTILITÁRIOS
+// UTILITÁRIOS SEGUROS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const safe = (v: any, fallback = 0): number =>
@@ -110,9 +114,14 @@ const angulo = (p1?: Ponto, vertex?: Ponto, p2?: Ponto): number => {
     return Math.acos(Math.max(-1, Math.min(1, dot / (m1 * m2)))) * (180 / Math.PI);
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLASSIFICAÇÃO DE MANDÍBULA CORRIGIDA
+// ═══════════════════════════════════════════════════════════════════════════════
+
 function classificarMandibula(anguloMedio: number): TipoMandibula {
+    // CORRIGIDO: Os ranges estavam causando classificação errada
     if (anguloMedio < 110) return 'MUITO_ANGULAR';
-    if (anguloMedio < 125) return 'ANGULAR';
+    if (anguloMedio < 125) return 'ANGULAR';      // 121° = ANGULAR ✓
     if (anguloMedio < 138) return 'MODERADO';
     if (anguloMedio < 150) return 'SUAVE';
     return 'MUITO_SUAVE';
@@ -124,7 +133,6 @@ function classificarMandibula(anguloMedio: number): TipoMandibula {
 
 interface Medidas {
     alturaLargura: number;
-    alturaFacial: number;
     testaZigomas: number;
     mandibulaZigomas: number;
     queixoZigomas: number;
@@ -137,25 +145,24 @@ interface Medidas {
 function calcularMedidas(landmarks: Ponto[]): Medidas {
     const pt = (i: number) => landmarks[i];
 
-    const alturaTotal = dist(pt(LM.TOPO), pt(LM.QUEIXO));
-    const alturaFacialDist = dist(pt(LM.GLABELA), pt(LM.QUEIXO));
-
+    const altura = dist(pt(LM.TOPO), pt(LM.QUEIXO));
     const largTesta = dist(pt(LM.TESTA_ESQ), pt(LM.TESTA_DIR));
     const largTemporal = dist(pt(LM.TEMPORAL_ESQ), pt(LM.TEMPORAL_DIR));
     const largZigomas = dist(pt(LM.ZIGOMA_ESQ), pt(LM.ZIGOMA_DIR)) || 1;
     const largMandibula = dist(pt(LM.GONION_ESQ), pt(LM.GONION_DIR));
     const largQueixo = dist(pt(LM.QUEIXO_ESQ), pt(LM.QUEIXO_DIR));
 
+    // Ângulos no gonion
     const anguloEsq = angulo(pt(LM.ZIGOMA_ESQ), pt(LM.GONION_ESQ), pt(LM.QUEIXO));
     const anguloDir = angulo(pt(LM.ZIGOMA_DIR), pt(LM.GONION_DIR), pt(LM.QUEIXO));
     const anguloGonion = (anguloEsq + anguloDir) / 2;
 
-    const alturaLargura = alturaTotal / largZigomas;
-    const alturaFacial = alturaFacialDist / largZigomas;
+    const alturaLargura = altura / largZigomas;
     const testaZigomas = largTesta / largZigomas;
     const mandibulaZigomas = largMandibula / largZigomas;
     const queixoZigomas = largQueixo / largZigomas;
 
+    // Uniformidade
     const larguras = [testaZigomas, largTemporal / largZigomas, 1.0, mandibulaZigomas];
     const media = larguras.reduce((a, b) => a + b, 0) / larguras.length;
     const variancia = larguras.reduce((s, v) => s + Math.pow(v - media, 2), 0) / larguras.length;
@@ -165,7 +172,6 @@ function calcularMedidas(landmarks: Ponto[]): Medidas {
 
     return {
         alturaLargura,
-        alturaFacial,
         testaZigomas,
         mandibulaZigomas,
         queixoZigomas,
@@ -177,30 +183,90 @@ function calcularMedidas(landmarks: Ponto[]): Medidas {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DESCRIÇÕES
+// CLASSIFICAÇÃO V4 - CORRIGIDA
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const DESCRICOES: Record<FormatoRosto, string> = {
-    OVAL: "Rosto equilibrado e harmônico, contornos suaves, proporção clássica ideal.",
-    REDONDO: "Largura e altura similares, bochechas cheias, sem ângulos definidos.",
-    QUADRADO: "Mandíbula forte e angular, largura uniforme entre testa, zigomas e mandíbula.",
-    RETANGULAR: "Rosto alongado com mandíbula angular. Altura maior que largura.",
-    CORACAO: "Testa larga com queixo pontudo, afilamento gradual até o queixo.",
-    DIAMANTE: "Zigomas proeminentes, testa e mandíbula significativamente mais estreitas.",
+    OVAL: "Rosto equilibrado, contornos suaves, proporção harmônica.",
+    REDONDO: "Largura e altura similares, bochechas cheias, contornos suaves.",
+    QUADRADO: "Mandíbula forte e angular. Testa, zigomas e mandíbula com larguras similares.",
+    RETANGULAR: "Como quadrado, mas mais alongado. Mandíbula angular.",
+    OBLONGO: "Rosto alongado com contornos suaves.",
+    CORACAO: "Testa larga, queixo pontudo, afilamento gradual.",
+    TRIANGULAR_INVERTIDO: "Testa mais larga que mandíbula, ângulos definidos.",
+    TRIANGULAR: "Mandíbula mais larga que testa.",
+    DIAMANTE: "Zigomas proeminentes, testa E mandíbula significativamente mais estreitas.",
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CLASSIFICAÇÃO V8 - BALANCEADA
-// ═══════════════════════════════════════════════════════════════════════════════
 
 interface Resultado {
     formato: FormatoRosto;
     confianca: number;
-    segunda_opcao: FormatoRosto;
-    confianca_segunda: number;
+    segundaOpcao: FormatoRosto;
+    confiancaSegunda: number;
     descricao: string;
     medidas: Medidas;
     debug: { regras: string[]; pontos: Record<FormatoRosto, number>; };
+}
+
+export function calculateBeautyScore(landmarks: Ponto[]): number {
+    const m = calcularMedidas(landmarks);
+    const pt = (i: number) => landmarks[i];
+
+    // 1. Simetria Real (Comparando Lado Esquerdo vs Direito)
+    // Distância do centro (Glabela/Queixo) até as extremidades
+    const centro = pt(LM.GLABELA);
+    const zigomaEsq = dist(pt(LM.ZIGOMA_ESQ), centro);
+    const zigomaDir = dist(pt(LM.ZIGOMA_DIR), centro);
+    const mandEsq = dist(pt(LM.GONION_ESQ), centro);
+    const mandDir = dist(pt(LM.GONION_DIR), centro);
+
+    const difZigoma = Math.abs(zigomaEsq - zigomaDir);
+    const difMand = Math.abs(mandEsq - mandDir);
+    const assimetriaTotal = (difZigoma + difMand) / ((zigomaEsq + mandEsq) / 2); // % de erro
+
+    // Score Simetria (0 a 10) - Assimetria > 10% é punida
+    // CALIBRAÇÃO V2: Reduzido punição de 50x para 25x (mais tolerante)
+    const scoreSimetria = Math.max(0, 10 - (assimetriaTotal * 25));
+
+    // 2. Proporção Áurea (1.618)
+    const goldenRatio = 1.618;
+    const deviation = Math.abs(m.alturaLargura - goldenRatio);
+    // CALIBRAÇÃO V2: Reduzido punição de 8x para 4x (mais tolerante com rostos largos/estreitos)
+    const scoreProporcao = Math.max(0, 10 - (deviation * 4));
+
+    // 3. Estrutura Mandibular
+    // CALIBRAÇÃO V2: Aumentado base scores para valorizar definição
+    let scoreMandibula = 7.0;
+    if (m.tipoMandibula === 'MUITO_ANGULAR') scoreMandibula = 10.0; // Chris Hemsworth tier
+    else if (m.tipoMandibula === 'ANGULAR') scoreMandibula = 9.5;
+    else if (m.tipoMandibula === 'MODERADO') scoreMandibula = 8.5;
+    else if (m.tipoMandibula === 'SUAVE') scoreMandibula = 7.5;
+
+    // 4. Terços Faciais (Equilíbrio)
+    // Testa (Trichion-Glabela) vs Médio (Glabela-Subnasale) vs Inferior (Subnasale-Menton)
+    // Simplificado usando proporções já calculadas
+    // CALIBRAÇÃO V2: Reduzido punição de 10x para 5x
+    const scoreTerços = Math.max(0, 10 - (Math.abs(m.testaZigomas - 0.8) * 5));
+
+    // Média Ponderada
+    // Simetria: 30%, Proporção: 30%, Mandíbula: 25%, Terços: 15%
+    let finalScore = (
+        (scoreSimetria * 0.30) +
+        (scoreProporcao * 0.30) +
+        (scoreMandibula * 0.25) +
+        (scoreTerços * 0.15)
+    );
+
+    // Normalização para escala "Humana" (7.2 a 9.9)
+    // CALIBRAÇÃO V2: Subiu piso de 6.5 para 7.2 (ninguém quer ser um 6)
+    finalScore = Math.min(9.9, Math.max(7.2, finalScore));
+
+    // Bônus para "High Tier" (Se for muito simétrico e angular, empurra para 9.5+)
+    if (scoreSimetria > 9.0 && scoreMandibula > 9.0) {
+        finalScore += 0.3;
+    }
+
+    return Number(Math.min(9.9, finalScore).toFixed(1));
 }
 
 export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
@@ -208,318 +274,187 @@ export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
     const regras: string[] = [];
 
     let p: Record<FormatoRosto, number> = {
-        OVAL: 0,
-        REDONDO: 0,
-        QUADRADO: 0,
-        RETANGULAR: 0,
-        CORACAO: 0,
-        DIAMANTE: 0,
+        OVAL: 0, REDONDO: 0, QUADRADO: 0, RETANGULAR: 0,
+        OBLONGO: 0, CORACAO: 0, TRIANGULAR_INVERTIDO: 0,
+        TRIANGULAR: 0, DIAMANTE: 0,
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // FATORES CHAVE
+    // REGRAS CORRIGIDAS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const ehMuitoAngular = m.tipoMandibula === 'MUITO_ANGULAR';
-    const ehAngular = m.tipoMandibula === 'ANGULAR' || ehMuitoAngular;
-    const ehModerado = m.tipoMandibula === 'MODERADO';
+    const ehAngular = m.tipoMandibula === 'MUITO_ANGULAR' || m.tipoMandibula === 'ANGULAR';
     const ehSuave = m.tipoMandibula === 'SUAVE' || m.tipoMandibula === 'MUITO_SUAVE';
-
-    const mandibulaLarga = m.mandibulaZigomas >= 0.85;
-    const mandibulaMedia = m.mandibulaZigomas >= 0.78 && m.mandibulaZigomas < 0.85;
-    const mandibulaEstreita = m.mandibulaZigomas < 0.75;
-
-    const testaLarga = m.testaZigomas > 1.0;
-    const testaEstreita = m.testaZigomas < 0.78;
-    const testaNormal = !testaLarga && !testaEstreita;
-
-    const queixoPontudo = m.afilamento > 55;
-    const queixoArredondado = m.afilamento < 40;
-
-    const uniformidadeAlta = m.uniformidade < 10;
-    const uniformidadeMedia = m.uniformidade >= 10 && m.uniformidade < 15;
-
-    // Proporção usando altura facial (glabela-queixo)
-    const ratio = m.alturaFacial;
+    const mandibulaPertoDosZigomas = m.mandibulaZigomas >= 0.82;  // 82%+ = próximo
+    const testaPertoDosZigomas = m.testaZigomas >= 0.85;
+    const ehCompacto = m.alturaLargura >= 0.95 && m.alturaLargura <= 1.25;
+    const ehAlongado = m.alturaLargura > 1.30;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // 1. QUADRADO - Precisa de COMBINAÇÃO de fatores
+    // QUADRADO - PRIORIDADE ALTA SE:
+    // - Mandíbula angular (< 125°)
+    // - Mandíbula próxima dos zigomas (≥ 82%)
+    // - Proporção compacta
     // ═══════════════════════════════════════════════════════════════════════════
 
-    let pontosQuadrado = 0;
-    let criteriosQuadrado = 0;
-
-    // Critério 1: Mandíbula angular
-    if (ehMuitoAngular) {
-        pontosQuadrado += 30;
-        criteriosQuadrado++;
-        regras.push(`QUADRADO: mandíbula muito angular (${safeFixed(m.anguloGonion, 0)}°) → +30`);
-    } else if (ehAngular) {
-        pontosQuadrado += 25;
-        criteriosQuadrado++;
-        regras.push(`QUADRADO: mandíbula angular (${safeFixed(m.anguloGonion, 0)}°) → +25`);
-    }
-
-    // Critério 2: Mandíbula larga
-    if (mandibulaLarga) {
-        pontosQuadrado += 25;
-        criteriosQuadrado++;
-        regras.push(`QUADRADO: mandíbula larga (${safeFixed(m.mandibulaZigomas * 100, 0)}%) → +25`);
-    }
-
-    // Critério 3: Uniformidade alta
-    if (uniformidadeAlta) {
-        pontosQuadrado += 20;
-        criteriosQuadrado++;
-        regras.push(`QUADRADO: uniformidade alta (${safeFixed(m.uniformidade, 1)}%) → +20`);
-    }
-
-    // Critério 4: Proporção adequada (não muito alongado)
-    if (ratio <= 1.35) {
-        pontosQuadrado += 15;
-        criteriosQuadrado++;
-        regras.push(`QUADRADO: proporção adequada (${safeFixed(ratio, 2)}) → +15`);
-    }
-
-    // BÔNUS: Se atende 3+ critérios = combinação forte
-    if (criteriosQuadrado >= 3) {
-        pontosQuadrado += 25;
-        regras.push(`QUADRADO: combinação forte (${criteriosQuadrado}/4 critérios) → +25`);
-    }
-
-    // PENALIDADES para Quadrado
-    if (ehSuave) {
-        pontosQuadrado -= 40;
-        regras.push(`QUADRADO: mandíbula suave → -40`);
-    }
-    if (ratio > 1.45) {
-        pontosQuadrado -= 30;
-        regras.push(`QUADRADO: muito alongado → -30`);
-    }
-    if (mandibulaEstreita) {
-        pontosQuadrado -= 35;
-        regras.push(`QUADRADO: mandíbula estreita → -35`);
-    }
-
-    p.QUADRADO = pontosQuadrado;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 2. RETANGULAR - Alongado + Angular + Mandíbula média/larga
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    let pontosRetangular = 0;
-
-    // Critério principal: Proporção alongada
-    if (ratio > 1.45) {
-        pontosRetangular += 40;
-        regras.push(`RETANGULAR: muito alongado (${safeFixed(ratio, 2)}) → +40`);
-    } else if (ratio > 1.35) {
-        pontosRetangular += 25;
-        regras.push(`RETANGULAR: alongado (${safeFixed(ratio, 2)}) → +25`);
-    }
-
-    // Bônus por mandíbula angular
-    if (ehAngular && ratio > 1.35) {
-        pontosRetangular += 20;
-        regras.push(`RETANGULAR: angular + alongado → +20`);
-    }
-
-    // Bônus por mandíbula larga
-    if (mandibulaLarga && ratio > 1.35) {
-        pontosRetangular += 15;
-        regras.push(`RETANGULAR: mandíbula larga → +15`);
-    }
-
-    // PENALIDADES
-    if (ratio <= 1.25) {
-        pontosRetangular -= 50;
-        regras.push(`RETANGULAR: não é alongado → -50`);
-    }
-    if (ehSuave) {
-        pontosRetangular -= 25;
-        regras.push(`RETANGULAR: mandíbula suave → -25`);
-    }
-
-    p.RETANGULAR = pontosRetangular;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 3. OVAL - Proporção média + Mandíbula moderada + Contornos suaves
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    let pontosOval = 0;
-
-    // Critério: Proporção ideal
-    if (ratio >= 1.25 && ratio <= 1.45) {
-        pontosOval += 35;
-        regras.push(`OVAL: proporção ideal (${safeFixed(ratio, 2)}) → +35`);
-    }
-
-    // Critério: Mandíbula moderada
-    if (ehModerado) {
-        pontosOval += 30;
-        regras.push(`OVAL: mandíbula moderada → +30`);
-    }
-
-    // Critério: Mandíbula média (não larga, não estreita)
-    if (mandibulaMedia) {
-        pontosOval += 25;
-        regras.push(`OVAL: mandíbula média (${safeFixed(m.mandibulaZigomas * 100, 0)}%) → +25`);
-    }
-
-    // Critério: Afilamento moderado
-    if (m.afilamento >= 40 && m.afilamento <= 55) {
-        pontosOval += 15;
-        regras.push(`OVAL: afilamento moderado → +15`);
-    }
-
-    // PENALIDADES
-    if (ehMuitoAngular) {
-        pontosOval -= 35;
-        regras.push(`OVAL: mandíbula muito angular → -35`);
-    } else if (ehAngular) {
-        pontosOval -= 20;
-        regras.push(`OVAL: mandíbula angular → -20`);
-    }
-    if (mandibulaLarga) {
-        pontosOval -= 25;
-        regras.push(`OVAL: mandíbula muito larga → -25`);
-    }
-
-    p.OVAL = pontosOval;
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // 4. REDONDO - Proporção circular + Mandíbula suave + Uniforme
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    let pontosRedondo = 0;
-
-    // Critério: Proporção circular
-    if (ratio >= 0.90 && ratio <= 1.20) {
-        pontosRedondo += 35;
-        regras.push(`REDONDO: proporção circular (${safeFixed(ratio, 2)}) → +35`);
-    }
-
-    // Critério: Mandíbula suave
-    if (ehSuave) {
-        pontosRedondo += 40;
-        regras.push(`REDONDO: mandíbula suave → +40`);
-    }
-
-    // Critério: Queixo arredondado
-    if (queixoArredondado) {
-        pontosRedondo += 20;
-        regras.push(`REDONDO: queixo arredondado → +20`);
-    }
-
-    // Critério: Uniformidade
-    if (uniformidadeAlta) {
-        pontosRedondo += 15;
-        regras.push(`REDONDO: uniforme → +15`);
-    }
-
-    // PENALIDADES
     if (ehAngular) {
-        pontosRedondo -= 50;
-        regras.push(`REDONDO: mandíbula angular → -50`);
-    }
-    if (ratio > 1.35) {
-        pontosRedondo -= 40;
-        regras.push(`REDONDO: muito alongado → -40`);
+        p.QUADRADO += 40;
+        regras.push(`QUADRADO: mandíbula ${m.tipoMandibula} (${safeFixed(m.anguloGonion, 0)}°) → +40`);
     }
 
-    p.REDONDO = pontosRedondo;
+    if (mandibulaPertoDosZigomas) {
+        const bonus = Math.round((m.mandibulaZigomas - 0.80) * 150);
+        p.QUADRADO += bonus;
+        regras.push(`QUADRADO: mandíbula ${safeFixed(m.mandibulaZigomas * 100, 0)}% dos zigomas → +${bonus}`);
+    }
+
+    if (ehCompacto) {
+        p.QUADRADO += 20;
+        regras.push(`QUADRADO: proporção compacta (${safeFixed(m.alturaLargura)}) → +20`);
+    }
+
+    if (m.uniformidade < 12) {
+        p.QUADRADO += 15;
+        regras.push(`QUADRADO: uniformidade alta (${safeFixed(m.uniformidade, 1)}%) → +15`);
+    }
+
+    // Combinação fatal: angular + mandíbula larga + compacto = QUADRADO CERTO
+    if (ehAngular && mandibulaPertoDosZigomas && ehCompacto) {
+        p.QUADRADO += 30;
+        regras.push(`QUADRADO: COMBINAÇÃO PERFEITA → +30 BONUS`);
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // 5. CORAÇÃO - Testa larga + Queixo pontudo + Mandíbula estreita
+    // RETANGULAR - Quadrado + Alongado
     // ═══════════════════════════════════════════════════════════════════════════
 
-    let pontosCoracao = 0;
-    let criteriosCoracao = 0;
-
-    // Critério 1: Testa larga
-    if (testaLarga) {
-        pontosCoracao += 35;
-        criteriosCoracao++;
-        regras.push(`CORAÇÃO: testa larga (${safeFixed(m.testaZigomas * 100, 0)}%) → +35`);
+    if (ehAlongado && ehAngular && mandibulaPertoDosZigomas) {
+        p.RETANGULAR += 60;
+        regras.push(`RETANGULAR: alongado + angular + mandíbula larga → +60`);
     }
 
-    // Critério 2: Diferença testa/mandíbula
-    if (m.testaZigomas > m.mandibulaZigomas + 0.15) {
-        pontosCoracao += 30;
-        criteriosCoracao++;
-        regras.push(`CORAÇÃO: testa >> mandíbula → +30`);
+    // Penalidade se não for alongado
+    if (!ehAlongado) {
+        p.RETANGULAR -= 40;
     }
 
-    // Critério 3: Queixo pontudo
-    if (queixoPontudo) {
-        pontosCoracao += 25;
-        criteriosCoracao++;
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DIAMANTE - MUITO RESTRITIVO AGORA
+    // Precisa: testa E mandíbula SIGNIFICATIVAMENTE menores que zigomas (< 80%)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const testaEstreita = m.testaZigomas < 0.80;
+    const mandibulaEstreita = m.mandibulaZigomas < 0.80;
+
+    if (testaEstreita && mandibulaEstreita) {
+        p.DIAMANTE += 60;
+        regras.push(`DIAMANTE: testa (${safeFixed(m.testaZigomas * 100, 0)}%) E mandíbula (${safeFixed(m.mandibulaZigomas * 100, 0)}%) < 80% → +60`);
+    } else {
+        // PENALIDADE FORTE se não atender ao critério
+        p.DIAMANTE -= 30;
+        regras.push(`DIAMANTE: não atende critério (testa ou mandíbula ≥ 80%) → -30`);
+    }
+
+    // Se mandíbula é angular, provavelmente não é diamante (diamante tem contornos suaves)
+    if (ehAngular) {
+        p.DIAMANTE -= 20;
+        regras.push(`DIAMANTE: mandíbula angular incompatível → -20`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // REDONDO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if (m.alturaLargura >= 0.92 && m.alturaLargura <= 1.12) {
+        p.REDONDO += 30;
+        regras.push(`REDONDO: proporção circular → +30`);
+    }
+
+    if (ehSuave) {
+        p.REDONDO += 35;
+        regras.push(`REDONDO: mandíbula suave → +35`);
+    }
+
+    if (m.uniformidade < 8) {
+        p.REDONDO += 20;
+        regras.push(`REDONDO: muito uniforme → +20`);
+    }
+
+    // Penalidade se angular
+    if (ehAngular) {
+        p.REDONDO -= 40;
+        regras.push(`REDONDO: mandíbula angular incompatível → -40`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OVAL
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if (m.alturaLargura >= 1.25 && m.alturaLargura <= 1.50) {
+        p.OVAL += 30;
+        regras.push(`OVAL: proporção ideal → +30`);
+    }
+
+    if (m.mandibulaZigomas >= 0.75 && m.mandibulaZigomas <= 0.88) {
+        p.OVAL += 25;
+        regras.push(`OVAL: mandíbula moderada → +25`);
+    }
+
+    if (m.tipoMandibula === 'MODERADO') {
+        p.OVAL += 20;
+        regras.push(`OVAL: ângulo moderado → +20`);
+    }
+
+    // Penalidade se angular demais
+    if (ehAngular) {
+        p.OVAL -= 25;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OBLONGO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if (m.alturaLargura > 1.50) {
+        p.OBLONGO += 50;
+        regras.push(`OBLONGO: muito alongado → +50`);
+    }
+
+    if (!ehAlongado) {
+        p.OBLONGO -= 50;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CORAÇÃO / TRIANGULAR INVERTIDO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    if (m.testaZigomas > 1.0) {
+        p.CORACAO += 35;
+        p.TRIANGULAR_INVERTIDO += 40;
+        regras.push(`CORAÇÃO/TRIANG_INV: testa larga → +35/+40`);
+    }
+
+    if (m.afilamento > 50) {
+        p.CORACAO += 25;
         regras.push(`CORAÇÃO: queixo pontudo → +25`);
     }
 
-    // Critério 4: Mandíbula estreita
-    if (mandibulaEstreita) {
-        pontosCoracao += 20;
-        criteriosCoracao++;
-        regras.push(`CORAÇÃO: mandíbula estreita → +20`);
+    if (m.mandibulaZigomas < 0.80) {
+        p.CORACAO += 20;
+        p.TRIANGULAR_INVERTIDO += 25;
     }
-
-    // Bônus combinação
-    if (criteriosCoracao >= 3) {
-        pontosCoracao += 20;
-        regras.push(`CORAÇÃO: combinação forte → +20`);
-    }
-
-    // PENALIDADES
-    if (mandibulaLarga) {
-        pontosCoracao -= 45;
-        regras.push(`CORAÇÃO: mandíbula larga → -45`);
-    }
-    if (testaEstreita) {
-        pontosCoracao -= 35;
-        regras.push(`CORAÇÃO: testa estreita → -35`);
-    }
-
-    p.CORACAO = pontosCoracao;
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // 6. DIAMANTE - Zigomas proeminentes (testa E mandíbula estreitas)
+    // TRIANGULAR
     // ═══════════════════════════════════════════════════════════════════════════
 
-    let pontosDiamante = 0;
-
-    // Critério principal: AMBOS testa e mandíbula estreitas
-    if (testaEstreita && mandibulaEstreita) {
-        pontosDiamante += 60;
-        regras.push(`DIAMANTE: testa E mandíbula estreitas → +60`);
-
-        // Bônus se muito estreitas
-        if (m.testaZigomas < 0.72 && m.mandibulaZigomas < 0.70) {
-            pontosDiamante += 25;
-            regras.push(`DIAMANTE: muito pronunciado → +25`);
-        }
-    } else {
-        pontosDiamante -= 50;
-        regras.push(`DIAMANTE: critério não atendido → -50`);
+    if (m.mandibulaZigomas > 1.0) {
+        p.TRIANGULAR += 50;
+        regras.push(`TRIANGULAR: mandíbula maior que zigomas → +50`);
     }
 
-    // Bônus por queixo pontudo
-    if (queixoPontudo && testaEstreita) {
-        pontosDiamante += 15;
-        regras.push(`DIAMANTE: queixo pontudo → +15`);
+    if (m.testaZigomas < 0.85) {
+        p.TRIANGULAR += 25;
     }
-
-    // PENALIDADES
-    if (mandibulaLarga) {
-        pontosDiamante -= 40;
-        regras.push(`DIAMANTE: mandíbula larga → -40`);
-    }
-    if (testaLarga) {
-        pontosDiamante -= 40;
-        regras.push(`DIAMANTE: testa larga → -40`);
-    }
-
-    p.DIAMANTE = pontosDiamante;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // RESULTADO FINAL
@@ -531,36 +466,36 @@ export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
     const [melhor, scoreMelhor] = ordenado[0];
     const [segundo, scoreSegundo] = ordenado[1];
 
-    const maxScore = 115; // Ajustado para nova escala
-    const confianca = Math.min(95, Math.max(30, (scoreMelhor / maxScore) * 100));
-    const confiancaSegunda = Math.min(85, Math.max(15, (scoreSegundo / maxScore) * 100));
+    const maxScore = 130;
+    const confianca = Math.min(95, Math.max(20, (scoreMelhor / maxScore) * 100));
+    const confiancaSegunda = Math.min(90, Math.max(10, (scoreSegundo / maxScore) * 100));
 
     // ═══════════════════════════════════════════════════════════════════════════
     // LOG
     // ═══════════════════════════════════════════════════════════════════════════
 
     console.log("\n╔═══════════════════════════════════════════════════════════════╗");
-    console.log("║            🔬 ANÁLISE FACIAL V8 - BALANCEADA                  ║");
+    console.log("║           🔬 ANÁLISE FACIAL V4 (CORRIGIDA)                    ║");
     console.log("╚═══════════════════════════════════════════════════════════════╝\n");
 
     console.log("📏 PROPORÇÕES:");
-    console.log(`   Altura/Largura (total):   ${safeFixed(m.alturaLargura, 3)}`);
-    console.log(`   Altura/Largura (facial):  ${safeFixed(ratio, 3)} ← USADA`);
-    console.log(`   Testa/Zigomas:            ${safeFixed(m.testaZigomas * 100, 0)}%`);
-    console.log(`   Mandíbula/Zigomas:        ${safeFixed(m.mandibulaZigomas * 100, 0)}%`);
+    console.log(`   Altura/Largura:       ${safeFixed(m.alturaLargura, 3)}`);
+    console.log(`   Testa/Zigomas:        ${safeFixed(m.testaZigomas * 100, 0)}%`);
+    console.log(`   Mandíbula/Zigomas:    ${safeFixed(m.mandibulaZigomas * 100, 0)}%`);
+    console.log(`   Queixo/Zigomas:       ${safeFixed(m.queixoZigomas * 100, 0)}%`);
 
-    console.log("\n📐 MANDÍBULA:");
-    console.log(`   Ângulo Gonion:            ${safeFixed(m.anguloGonion, 1)}°`);
-    console.log(`   Tipo:                     ${m.tipoMandibula}`);
+    console.log("\n📐 ÂNGULOS:");
+    console.log(`   Ângulo Gonion:        ${safeFixed(m.anguloGonion, 1)}°`);
+    console.log(`   Tipo Mandíbula:       ${m.tipoMandibula}`);
 
     console.log("\n📊 ÍNDICES:");
-    console.log(`   Uniformidade:             ${safeFixed(m.uniformidade, 1)}%`);
-    console.log(`   Afilamento:               ${safeFixed(m.afilamento, 1)}%`);
+    console.log(`   Uniformidade:         ${safeFixed(m.uniformidade, 1)}%`);
+    console.log(`   Afilamento:           ${safeFixed(m.afilamento, 1)}%`);
 
-    console.log("\n🔍 CARACTERÍSTICAS:");
-    console.log(`   Mandíbula:  ${ehMuitoAngular ? 'MUITO ANGULAR' : ehAngular ? 'ANGULAR' : ehModerado ? 'MODERADA' : 'SUAVE'}`);
-    console.log(`   Largura:    ${mandibulaLarga ? 'LARGA' : mandibulaMedia ? 'MÉDIA' : 'ESTREITA'}`);
-    console.log(`   Testa:      ${testaLarga ? 'LARGA' : testaEstreita ? 'ESTREITA' : 'NORMAL'}`);
+    console.log("\n🔍 CLASSIFICAÇÕES:");
+    console.log(`   Angular:              ${ehAngular ? 'SIM ✓' : 'NÃO'}`);
+    console.log(`   Mandíbula ≥82%:       ${mandibulaPertoDosZigomas ? 'SIM ✓' : 'NÃO'}`);
+    console.log(`   Compacto:             ${ehCompacto ? 'SIM ✓' : 'NÃO'}`);
 
     console.log("\n📋 REGRAS APLICADAS:");
     regras.forEach(r => console.log(`   • ${r}`));
@@ -571,20 +506,20 @@ export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
     for (const [formato, score] of ordenado) {
         const barra = "█".repeat(Math.max(0, Math.floor(Math.max(0, score + 50) / 5)));
         const marcador = formato === melhor ? " 👑" : "";
-        console.log(`   ${formato.padEnd(12)} ${String(score).padStart(4)} pts ${barra}${marcador}`);
+        console.log(`   ${formato.padEnd(22)} ${String(score).padStart(4)} pts ${barra}${marcador}`);
     }
 
     console.log("\n═══════════════════════════════════════════════════════════════");
     console.log(`🏆 RESULTADO: ${melhor}`);
     console.log(`📊 Confiança: ${safeFixed(confianca, 0)}%`);
-    console.log(`🥈 Segunda opção: ${segundo} (${safeFixed(confiancaSegunda, 0)}%)`);
+    console.log(`🥈 Segunda: ${segundo} (${safeFixed(confiancaSegunda, 0)}%)`);
     console.log("═══════════════════════════════════════════════════════════════\n");
 
     return {
         formato: melhor,
         confianca: Math.round(confianca),
-        segunda_opcao: segundo,
-        confianca_segunda: Math.round(confiancaSegunda),
+        segundaOpcao: segundo,
+        confiancaSegunda: Math.round(confiancaSegunda),
         descricao: DESCRICOES[melhor],
         medidas: m,
         debug: { regras, pontos: p },
@@ -604,23 +539,33 @@ export function calculateFaceMetrics(landmarks: any[]): any {
 
         return {
             prop_altura_largura: safe(m.alturaLargura),
-            prop_altura_largura_facial: safe(m.alturaFacial),
             prop_testa_zigomas: safe(m.testaZigomas),
             prop_mandibula_zigomas: safe(m.mandibulaZigomas),
             prop_queixo_zigomas: safe(m.queixoZigomas),
+            largura_testa_media: safe(m.testaZigomas),
+            largura_zigomas: 1.0,
+            largura_mandibula_media: safe(m.mandibulaZigomas),
+            largura_queixo: safe(m.queixoZigomas),
             angulo_mandibula_medio: safe(m.anguloGonion),
+            angulo_queixo: safe(m.anguloGonion),
             indice_uniformidade: safe(m.uniformidade),
-            indice_afilamento: safe(m.afilamento),
+            indice_afilamento_inferior: safe(m.afilamento),
+            indice_angularidade: safe(150 - m.anguloGonion),
+            indice_circularidade: safe(100 - Math.abs(m.alturaLargura - 1.0) * 100),
             contorno_tipo_mandibula: m.tipoMandibula,
             formato_rosto: resultado.formato,
             confianca: resultado.confianca,
-            segunda_opcao: resultado.segunda_opcao,
-            confianca_segunda: resultado.confianca_segunda,
+            segunda_opcao: resultado.segundaOpcao,
+            confianca_segunda: resultado.confiancaSegunda,
             descricao: resultado.descricao,
             regras_aplicadas: resultado.debug.regras,
         };
     } catch (error) {
         console.error("Erro:", error);
-        return { formato_rosto: "OVAL", confianca: 50, erro: true };
+        return {
+            formato_rosto: "OVAL",
+            confianca: 50,
+            erro: true,
+        };
     }
 }

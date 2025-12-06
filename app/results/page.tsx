@@ -98,8 +98,8 @@ export default function ResultsPage() {
         { subject: 'PROPORÇÃO ÁUREA', A: result.grafico_radar?.proporcao_aurea || 50, B: 96, fullMark: 100 },
     ];
 
-    const currentScore = result.analise_geral?.nota_final || 6.2;
-    const potentialScore = Math.min(10.0, result.analise_geral?.nota_potencial || (currentScore + 1.5));
+    const currentScore = parseFloat(String(result.analise_geral?.nota_final || 6.2));
+    const potentialScore = Math.min(10.0, parseFloat(String(result.analise_geral?.nota_potencial || (currentScore + 1.5))));
     const gap = (potentialScore - currentScore).toFixed(1);
 
     return (
@@ -190,38 +190,40 @@ export default function ResultsPage() {
                         ONDE ESTÃO SEUS <span className="text-primary">PONTOS CEGOS</span>
                     </h2>
 
-                    <div className="h-[400px] md:h-[500px] w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '400px' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                                <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                                <PolarAngleAxis
-                                    dataKey="subject"
-                                    tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 'bold' }}
-                                />
-                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <div className="w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '400px', width: '100%' }}>
+                        {radarData && radarData.length > 0 && (
+                            <ResponsiveContainer width="100%" height={400}>
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                                    <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                                    <PolarAngleAxis
+                                        dataKey="subject"
+                                        tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 'bold' }}
+                                    />
+                                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
 
-                                {/* Current Score Radar */}
-                                <Radar
-                                    name="Atual"
-                                    dataKey="A"
-                                    stroke="#ffffff"
-                                    strokeWidth={2}
-                                    fill="#ffffff"
-                                    fillOpacity={0.1}
-                                />
+                                    {/* Current Score Radar */}
+                                    <Radar
+                                        name="Atual"
+                                        dataKey="A"
+                                        stroke="#ffffff"
+                                        strokeWidth={2}
+                                        fill="#ffffff"
+                                        fillOpacity={0.1}
+                                    />
 
-                                {/* Potential Score Radar */}
-                                <Radar
-                                    name="Potencial"
-                                    dataKey="B"
-                                    stroke="#39FF14"
-                                    strokeWidth={3}
-                                    strokeDasharray="4 4"
-                                    fill="#39FF14"
-                                    fillOpacity={0.2}
-                                />
-                            </RadarChart>
-                        </ResponsiveContainer>
+                                    {/* Potential Score Radar */}
+                                    <Radar
+                                        name="Potencial"
+                                        dataKey="B"
+                                        stroke="#39FF14"
+                                        strokeWidth={3}
+                                        strokeDasharray="4 4"
+                                        fill="#39FF14"
+                                        fillOpacity={0.2}
+                                    />
+                                </RadarChart>
+                            </ResponsiveContainer>
+                        )}
 
                         {/* Legend */}
                         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-sm font-mono">
@@ -269,7 +271,17 @@ export default function ResultsPage() {
                                             <span className="text-xs font-mono text-primary tracking-widest">PRIME AI ANALYTICS</span>
                                         </div>
                                         <h3 className="text-3xl font-black text-white italic uppercase leading-none">
-                                            {result.analise_geral?.arquetipo || "THE UNKNOWN"}
+                                            {result.analise_geral?.arquetipo || (() => {
+                                                // Fallback Logic based on Face Shape
+                                                const shape = result.rosto?.formato_rosto?.toLowerCase();
+                                                if (shape?.includes('quadrado')) return "THE RULER";
+                                                if (shape?.includes('diamante')) return "THE HUNTER";
+                                                if (shape?.includes('oval')) return "THE NOBLE";
+                                                if (shape?.includes('triângulo') || shape?.includes('triangulo')) return "THE CREATOR";
+                                                if (shape?.includes('coração') || shape?.includes('coracao')) return "THE CHARMER";
+                                                if (shape?.includes('redondo')) return "THE MYSTIC";
+                                                return "THE MAVERICK"; // Ultimate Fallback
+                                            })()}
                                         </h3>
                                     </div>
                                     <ScanFace className="w-8 h-8 text-white/50" />
@@ -373,9 +385,9 @@ export default function ResultsPage() {
                     <div className="absolute inset-0 opacity-5 mix-blend-overlay" />
 
                     <div className="space-y-4 relative z-10">
-                        <h2 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-                            DESBLOQUEIE SEU <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">DOSSIÊ PRIME AI</span>
+                        <h2 className="text-4xl md:text-6xl font-black text-white leading-none tracking-tighter italic transform -skew-x-6">
+                            CHEGA DE SEGREDOS. <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-400 to-primary animate-pulse">VOCÊ É VIP!</span>
                         </h2>
 
                         <div className="bg-white/5 p-6 rounded-xl border border-white/10 max-w-lg mx-auto text-left space-y-3">
@@ -404,7 +416,7 @@ export default function ResultsPage() {
                             className="w-full md:w-auto px-12 h-24 text-xl md:text-2xl font-black uppercase tracking-widest animate-pulse shadow-[0_0_60px_rgba(57,255,20,0.4)] hover:shadow-[0_0_100px_rgba(57,255,20,0.6)] hover:scale-105 transition-all duration-300 border-2 border-primary bg-black text-primary hover:bg-primary hover:text-black"
                             onClick={handleCheckout}
                         >
-                            DESBLOQUEAR MEU DOSSIÊ AGORA
+                            DESBLOQUEAR MEU DOSSIÊ E ACESSO VIP AGORA
                             <Zap className="ml-3 w-8 h-8 fill-current" />
                         </Button>
                         <div className="flex flex-col items-center gap-1">
