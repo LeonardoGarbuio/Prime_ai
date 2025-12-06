@@ -72,11 +72,10 @@ USE ESTES DADOS COMO BASE ABSOLUTA PARA O FORMATO.
 
 📊 DADOS TÉCNICOS (VERDADE ABSOLUTA):
 - Formato Principal: ${metrics.formato_rosto} (Confiança: ${metrics.confianca}%)
-- Segunda Opção: ${metrics.segunda_opcao} (Confiança: ${metrics.confianca_segunda}%)
-- Ângulo Mandíbula: ${metrics.angulo_mandibula_medio.toFixed(1)}°
-- Ângulo Queixo: ${metrics.angulo_queixo.toFixed(1)}°
-- Proporção Altura/Largura: ${metrics.prop_altura_largura.toFixed(2)}
-- Índice de Angularidade: ${metrics.indice_angularidade.toFixed(1)}%
+- Segunda Opção: ${metrics.segunda_opcao || "N/A"} (Confiança: ${metrics.confianca_segunda || 0}%)
+- Ângulo Mandíbula: ${(metrics.angulo_mandibula_medio || 0).toFixed(1)}°
+- Proporção Altura/Largura: ${(metrics.prop_altura_largura || 0).toFixed(2)}
+- Índice de Afilamento: ${(metrics.indice_afilamento || 0).toFixed(1)}%
 
 INSTRUÇÕES:
 1. O formato do rosto É ${metrics.formato_rosto}. Não tente adivinhar outro.
@@ -86,12 +85,12 @@ INSTRUÇÕES:
 RETORNE APENAS ESTE JSON (sem texto adicional):
 {
     "medidas": {
-        "L_TESTA": ${(metrics.largura_testa_media * 100).toFixed(0)},
+        "L_TESTA": ${((metrics.prop_testa_zigomas || 0) * 100).toFixed(0)},
         "L_ZIGOMAS": 100,
-        "L_MANDIBULA": ${(metrics.largura_mandibula_media * 100).toFixed(0)},
-        "ALTURA": ${(metrics.prop_altura_largura * 100).toFixed(0)},
+        "L_MANDIBULA": ${((metrics.prop_mandibula_zigomas || 0) * 100).toFixed(0)},
+        "ALTURA": ${((metrics.prop_altura_largura || 0) * 100).toFixed(0)},
         "maior_largura": "CALCULE_BASEADO_NOS_DADOS",
-        "angulo_mandibula": "${metrics.angulo_mandibula_medio < 125 ? 'ANGULAR' : 'CURVO'}"
+        "angulo_mandibula": "${(metrics.angulo_mandibula_medio || 135) < 125 ? 'ANGULAR' : 'CURVO'}"
     },
     "analise_geral": { 
         "nota_final": 7.23,
@@ -268,7 +267,7 @@ Use decimais variados (7.43, 6.81, 8.27).`;
             // Injetar dados calculados para o frontend exibir se quiser
             aiResult.rosto.dados_tecnicos = {
                 angulo_mandibula: metrics.angulo_mandibula_medio,
-                indice_angularidade: metrics.indice_angularidade,
+                indice_afilamento: metrics.indice_afilamento,
                 segunda_opcao: metrics.segunda_opcao
             };
         }

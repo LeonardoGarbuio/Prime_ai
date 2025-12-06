@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -25,8 +25,13 @@ export default function AnalyzingPage() {
 
     // ... imports
 
+    const analyzingRef = useRef(false);
+
     useEffect(() => {
         const analyzeImages = async () => {
+            if (analyzingRef.current) return;
+            analyzingRef.current = true;
+
             const faceImage = localStorage.getItem("faceImage");
             const bodyImage = localStorage.getItem("bodyImage");
 
@@ -53,7 +58,10 @@ export default function AnalyzingPage() {
                 console.log("🔍 Starting MediaPipe Analysis...");
                 const img = new Image();
                 img.src = faceImage;
-                await new Promise((resolve) => (img.onload = resolve));
+                await new Promise((resolve, reject) => {
+                    img.onload = () => resolve(null);
+                    img.onerror = () => reject(new Error("Failed to load image"));
+                });
 
                 const landmarks = await detectFaceLandmarks(img);
                 if (landmarks) {
@@ -94,6 +102,8 @@ export default function AnalyzingPage() {
                 console.error(error);
                 alert("Erro na análise. Verifique sua conexão ou tente outra foto.");
                 router.push("/scan");
+            } finally {
+                analyzingRef.current = false;
             }
         };
 
