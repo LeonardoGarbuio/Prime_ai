@@ -59,6 +59,7 @@ export default function AnalyzingPage() {
 
             // MediaPipe Analysis
             let metrics = null;
+            let faceDetected = false;
             try {
                 console.log("🔍 Starting MediaPipe Analysis...");
                 const img = new Image();
@@ -70,6 +71,7 @@ export default function AnalyzingPage() {
 
                 const landmarks = await detectFaceLandmarks(img);
                 if (landmarks) {
+                    faceDetected = true;
                     metrics = calculateFaceMetrics(landmarks);
                     const beautyScore = calculateBeautyScore(landmarks);
                     metrics = { ...metrics, beauty_score: beautyScore }; // Inject score into metrics
@@ -78,8 +80,21 @@ export default function AnalyzingPage() {
                 } else {
                     console.warn("⚠️ No landmarks detected by MediaPipe");
                 }
-            } catch (e) {
+            } catch (e: any) {
                 console.error("❌ MediaPipe Error:", e);
+                // If the error is specifically about no face detected, stop the process
+                if (e.message && e.message.includes("rosto")) {
+                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto (não use fotos de animais, objetos ou memes).");
+                    router.push("/scan");
+                    return;
+                }
+            }
+
+            // If MediaPipe didn't detect a face, stop the process
+            if (!faceDetected) {
+                alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto.");
+                router.push("/scan");
+                return;
             }
 
             // API Call Promise
@@ -98,6 +113,12 @@ export default function AnalyzingPage() {
                 })
                 .then((data) => {
                     console.log("API Response Data:", data);
+
+                    // Check if face was not detected
+                    if (data.error === "face_not_detected") {
+                        throw new Error("FACE_NOT_DETECTED");
+                    }
+
                     localStorage.setItem("analysisResult", JSON.stringify(data));
                     return data;
                 });
@@ -106,9 +127,15 @@ export default function AnalyzingPage() {
                 await Promise.all([animationPromise, apiPromise]);
                 setProgress(100);
                 setTimeout(() => router.push("/results"), 500);
-            } catch (error) {
+            } catch (error: any) {
                 console.error(error);
-                alert("Erro na análise. Verifique sua conexão ou tente outra foto.");
+
+                if (error.message === "FACE_NOT_DETECTED") {
+                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto (não use fotos de animais, objetos ou memes).");
+                } else {
+                    alert("Erro na análise. Verifique sua conexão ou tente outra foto.");
+                }
+
                 router.push("/scan");
             } finally {
                 analyzingRef.current = false;

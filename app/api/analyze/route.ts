@@ -90,6 +90,17 @@ export async function POST(req: Request) {
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Estética e Imagem Pessoal.
             CONTEXTO DO USUÁRIO: "${userContext || 'Análise de look do dia'}"
             
+            ⚠️ VALIDAÇÃO CRÍTICA (EXECUTAR PRIMEIRO):
+            1. Verifique se há um ROSTO HUMANO REAL na imagem.
+            2. Se a imagem contiver: animais, objetos, desenhos, memes, paisagens, personagens fictícios, IA gerada, ou qualquer coisa que NÃO seja um rosto humano real - REJEITE IMEDIATAMENTE.
+            3. Se não houver rosto humano, retorne APENAS este JSON:
+            {
+                "error": "face_not_detected",
+                "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
+            }
+            
+            SE HOUVER UM ROSTO HUMANO REAL, continue com a análise:
+            
             TAREFA: Realizar uma análise COMPLETA (Forense + Estilo).
             O usuário é VIP e pagou para ter TUDO: Análise geométrica precisa E dicas de estilo para o evento de hoje.
 
@@ -105,7 +116,8 @@ export async function POST(req: Request) {
             SAÍDA JSON (ESTRITA - SUPERSET):
             {
                 "analise_geral": { 
-                    "nota_final": (Número decimal entre 0.0 e 10.0), 
+                    "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA e VARIADO, nem todo mundo é 7+), 
+                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar),
                     "idade_real_estimada": (Número inteiro),
                     "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
                     "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
@@ -160,6 +172,18 @@ export async function POST(req: Request) {
             // === MODO FORENSE (PADRÃO) ===
             promptText = `
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Estética.
+            
+            ⚠️ VALIDAÇÃO CRÍTICA (EXECUTAR PRIMEIRO):
+            1. Verifique se há um ROSTO HUMANO REAL na imagem.
+            2. Se a imagem contiver: animais, objetos, desenhos, memes, paisagens, personagens fictícios, IA gerada, ou qualquer coisa que NÃO seja um rosto humano real - REJEITE IMEDIATAMENTE.
+            3. Se não houver rosto humano, retorne APENAS este JSON:
+            {
+                "error": "face_not_detected",
+                "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
+            }
+            
+            SE HOUVER UM ROSTO HUMANO REAL, continue com a análise:
+            
             TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
 
             ${metricsContext}
@@ -173,7 +197,8 @@ export async function POST(req: Request) {
             SAÍDA: APENAS O JSON ABAIXO.
             {
                 "analise_geral": { 
-                    "nota_final": (Número decimal entre 0.0 e 10.0), 
+                    "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA, nem todo mundo é 7+), 
+                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar com melhorias),
                     "idade_real_estimada": (Número inteiro),
                     "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
                     "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
@@ -373,10 +398,9 @@ export async function POST(req: Request) {
                 };
             }
 
-            // Forçar Nota do Look se disponível
-            if (metrics.beauty_score && aiResult.analise_geral) {
-                aiResult.analise_geral.nota_final = metrics.beauty_score;
-            }
+            // Nota: NÃO sobrescrevemos nota_final da IA
+            // A IA deve dar sua própria nota baseada na análise visual completa
+            // O beauty_score do MediaPipe é apenas para referência interna
         }
 
         return NextResponse.json(aiResult);
