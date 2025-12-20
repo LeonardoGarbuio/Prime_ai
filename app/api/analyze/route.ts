@@ -261,8 +261,8 @@ export async function POST(req: Request) {
             // Flash 2.0 é mais criativo, Pro é mais conservador.
             // Vamos manter padronizado por enquanto.
             const currentConfig = {
-                temperature: mode === "stylist" ? 0.7 : 0.2,
-                seed: mode === "stylist" ? undefined : 42
+                temperature: mode === "stylist" ? 0.7 : 0.4,
+                // Removido seed: 42 para permitir resultados variados entre diferentes rostos
             };
 
             // Injeta config no body (clone para não alterar o original se precisasse)
@@ -296,72 +296,133 @@ export async function POST(req: Request) {
             }
         }
 
-        // --- ULTIMATE FALLBACK (Local Generation) ---
+        // --- FALLBACK #1: GROQ API (Cérebro Substituto) ---
         if (!genResp || !genResp.ok) {
-            console.warn("⚠️ Todos os modelos falharam. Ativando ULTIMATE FALLBACK (Geração Local)...");
+            console.warn("⚠️ Gemini falhou. Tentando GROQ como backup...");
+
+            const groqApiKey = process.env.GROQ_API_KEY;
+
+            if (groqApiKey) {
+                try {
+                    const groqModels = [
+                        "llama-3.2-90b-vision-preview",
+                        "llama-3.2-11b-vision-preview",
+                        "llava-v1.5-7b-4096-preview"
+                    ];
+
+                    for (const groqModel of groqModels) {
+                        console.log(`🧠 GROQ: Tentando ${groqModel}...`);
+
+                        const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${groqApiKey}`,
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                model: groqModel,
+                                messages: [{
+                                    role: "user",
+                                    content: [
+                                        { type: "text", text: promptText },
+                                        { type: "image_url", image_url: { url: faceImage.startsWith("data:") ? faceImage : `data:image/jpeg;base64,${cleanBase64(faceImage)}` } }
+                                    ]
+                                }],
+                                max_tokens: 2000,
+                                temperature: 0.4
+                            })
+                        });
+
+                        if (groqResponse.ok) {
+                            const groqData = await groqResponse.json();
+                            const groqText = groqData.choices?.[0]?.message?.content || "";
+                            const groqJsonMatch = groqText.match(/\{[\s\S]*\}/);
+
+                            if (groqJsonMatch) {
+                                console.log(`✅ GROQ: Sucesso com ${groqModel}!`);
+                                const groqResult = JSON.parse(groqJsonMatch[0]);
+
+                                if (hasDetailedMetrics && groqResult.rosto) {
+                                    groqResult.rosto.formato_rosto = metrics.formato_rosto;
+                                    if (metrics.beauty_score && groqResult.analise_geral) {
+                                        groqResult.analise_geral.nota_final = metrics.beauty_score;
+                                    }
+                                }
+
+                                groqResult.ai_provider = "GROQ";
+                                return NextResponse.json(groqResult);
+                            }
+                        } else {
+                            const errBody = await groqResponse.json().catch(() => ({}));
+                            console.warn(`⚠️ GROQ ${groqModel} falhou: ${errBody.error?.message || groqResponse.status}`);
+                        }
+                    }
+                } catch (groqError: any) {
+                    console.warn("⚠️ GROQ erro:", groqError.message);
+                }
+            } else {
+                console.warn("⚠️ GROQ_API_KEY não configurada, pulando fallback GROQ...");
+            }
+        }
+
+        // --- FALLBACK #2: Geração Local (Último Recurso) ---
+        if (!genResp || !genResp.ok) {
+            console.warn("⚠️ Todos os modelos falharam. Ativando FALLBACK LOCAL...");
 
             const shape = metrics?.formato_rosto || "Oval";
             const archetypeMap: any = {
-                "Quadrado": "THE RULER",
-                "Diamante": "THE HUNTER",
-                "Oval": "THE NOBLE",
-                "Triângulo": "THE CREATOR",
-                "Coração": "THE CHARMER",
-                "Redondo": "THE MYSTIC"
+                "Quadrado": "THE RULER", "QUADRADO": "THE RULER",
+                "Diamante": "THE HUNTER", "DIAMANTE": "THE HUNTER",
+                "Oval": "THE NOBLE", "OVAL": "THE NOBLE",
+                "Triângulo": "THE CREATOR", "TRIANGULAR": "THE CREATOR",
+                "Coração": "THE CHARMER", "CORACAO": "THE CHARMER",
+                "Redondo": "THE MYSTIC", "REDONDO": "THE MYSTIC",
+                "RETANGULAR": "THE COMMANDER"
             };
+
+            // Usa métricas reais do MediaPipe
+            const beautyScore = metrics?.beauty_score || (7.0 + Math.random() * 2).toFixed(1);
+            const propAlturaLargura = metrics?.prop_altura_largura || 1.3;
+            const propSimetria = metrics?.prop_mandibula_zigomas || 0.85;
+            const simetriaScore = Math.min(95, Math.max(50, Math.round((propSimetria * 100))));
+            const estruturaScore = Math.min(95, Math.max(50, Math.round((propAlturaLargura - 1) * 100 + 60)));
 
             const fallbackResult = {
                 analise_geral: {
-                    nota_final: metrics?.beauty_score ? String(metrics.beauty_score) : (7.0 + Math.random() * 2).toFixed(1),
-                    idade_real_estimada: 25 + Math.floor(Math.random() * 10),
-                    potencial_genetico: "Alto",
-                    arquetipo: archetypeMap[shape] || "THE MAVERICK",
-                    resumo_brutal: "Análise baseada em geometria facial pura. Seus traços indicam forte personalidade e potencial estético elevado, embora a iluminação da foto possa ter afetado a precisão da IA."
+                    nota_final: String(beautyScore),
+                    idade_real_estimada: 25,
+                    potencial_genetico: parseFloat(String(beautyScore)) >= 8.5 ? "Elite" : parseFloat(String(beautyScore)) >= 7.5 ? "Alto" : "Médio",
+                    arquetipo: archetypeMap[shape] || archetypeMap[shape.toUpperCase()] || "THE MAVERICK",
+                    resumo_brutal: `Análise geométrica detectou formato ${shape}. Estrutura com proporções ${parseFloat(String(beautyScore)) >= 8 ? "harmônicas" : "equilibradas"}.`
                 },
                 rosto: {
                     formato_rosto: shape,
-                    pontos_fortes: ["Simetria Estrutural", "Proporção de Terços", "Definição Mandibular"],
-                    pontos_de_atencao: ["Leve assimetria ocular", "Ângulo gonial suave"],
-                    analise_pele: "Textura uniforme detectada na análise preliminar."
+                    pontos_fortes: [
+                        `Formato ${shape} bem definido`,
+                        propSimetria > 0.85 ? "Boa simetria mandibular" : "Estrutura facial equilibrada",
+                        propAlturaLargura > 1.4 ? "Proporções alongadas elegantes" : "Proporções harmônicas"
+                    ],
+                    pontos_de_atencao: [
+                        propSimetria < 0.9 ? "Pequena assimetria detectada" : "Refinamento de contorno",
+                        "Análise de pele requer IA avançada"
+                    ],
+                    analise_pele: "Análise básica - para detalhes completos, tente novamente."
                 },
                 grafico_radar: {
-                    simetria: 85,
-                    pele: 80,
-                    estrutura_ossea: 88,
-                    terco_medio: 75,
-                    proporcao_aurea: 82
+                    simetria: simetriaScore,
+                    pele: 70 + Math.floor(Math.random() * 20),
+                    estrutura_ossea: estruturaScore,
+                    terco_medio: Math.round(simetriaScore * 0.9),
+                    proporcao_aurea: Math.round((parseFloat(String(beautyScore)) / 10) * 100)
                 },
-                corpo_postura: {
-                    analise: "Apenas rosto visível.",
-                    gordura_estimada: "Média"
-                },
+                corpo_postura: { analise: "Apenas rosto visível.", gordura_estimada: "Média" },
                 plano_harmonizacao: {
-                    passo_1_imediato: "Melhorar iluminação para fotos",
-                    passo_2_rotina: "Skincare focado em hidratação",
-                    passo_3_longo_prazo: "Consultoria de visagismo completa"
+                    passo_1_imediato: "Iluminação adequada para fotos",
+                    passo_2_rotina: "Skincare básico diário",
+                    passo_3_longo_prazo: "Consultoria de visagismo"
                 },
-                analise_cromatica: {
-                    estacao: "Inverno Frio",
-                    descricao: "Seu contraste natural pede cores profundas e frias para harmonizar.",
-                    paleta_ideal: ["#000000", "#1C39BB", "#ffffff", "#880E4F", "#212121"]
-                },
-                guia_vestuario: {
-                    pecas_chave: ["Blazer Estruturado Navy", "Camisa Branca Oxford", "Jaqueta de Couro Minimalista"],
-                    evitar: ["Tons terrosos apagados", "Estampas muito miúdas"],
-                    acessorios: "Metais prateados ou aço escovado. Óculos com armação preta ou tartaruga escuro."
-                },
-                feedback_rapido: {
-                    nota_do_look: 8.5,
-                    vibe_transmitida: "Confiante e Moderna",
-                    o_que_funcionou: "O enquadramento valorizou seu rosto.",
-                    o_que_matou_o_look: "Poderia ter mais contraste no fundo."
-                },
-                sugestao_imediata: {
-                    truque_de_5_minutos: "Levante levemente o queixo para fotos.",
-                    produto_chave: "Iluminador facial"
-                },
-                adaptacao_trend: "Aposte no estilo Old Money para valorizar seus traços clássicos.",
-                is_fallback: true
+                is_fallback: true,
+                ai_provider: "LOCAL"
             };
 
             return NextResponse.json(fallbackResult);
