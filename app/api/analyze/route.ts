@@ -102,7 +102,25 @@ export async function POST(req: Request) {
             SE HOUVER UM ROSTO HUMANO REAL, continue com a análise:
             
             TAREFA: Realizar uma análise COMPLETA (Forense + Estilo).
-            O usuário é VIP e pagou para ter TUDO: Análise geométrica precisa E dicas de estilo para o evento de hoje.
+            O usuário é VIP e pagou para ter TUDO: Análise geométrica precisa E dicas de estilo.
+
+            ⛔ REGRAS ABSOLUTAS - PROIBIÇÕES:
+            - NUNCA sugira cirurgias plásticas (rinoplastia, bichectomia, lifting, etc)
+            - NUNCA sugira procedimentos invasivos (botox, preenchimento, harmonização facial médica)
+            - NUNCA sugira tratamentos dermatológicos agressivos
+            - NUNCA mencione "corrigir" defeitos físicos permanentes
+            - Foque APENAS em VISAGISMO: como PARECER melhor, não como MUDAR o rosto
+
+            ✅ FOCO TOTAL EM VISAGISMO (O QUE VOCÊ DEVE SUGERIR):
+            - Cortes de cabelo ideais para o formato do rosto
+            - Estilo de barba que harmoniza a mandíbula
+            - Armação de óculos ideal
+            - Maquiagem e contorno
+            - Cores de roupa que favorecem
+            - Ângulos melhores para fotos
+            - Postura e expressão facial
+            - Acessórios que valorizam
+            - Penteados e styling de cabelo
 
             ${metricsContext}
 
@@ -117,7 +135,7 @@ export async function POST(req: Request) {
             {
                 "analise_geral": { 
                     "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA e VARIADO, nem todo mundo é 7+), 
-                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar),
+                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar COM VISAGISMO),
                     "idade_real_estimada": (Número inteiro),
                     "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
                     "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
@@ -126,8 +144,8 @@ export async function POST(req: Request) {
                 "rosto": { 
                     "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
                     "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "pontos_de_atencao": ["Assimetria 1", "Ponto 2"], 
-                    "analise_pele": "Análise dermatológica detalhada." 
+                    "pontos_de_atencao": ["Observação de visagismo 1 - ex: cabelo muito rente destaca as orelhas", "Observação 2 - ex: barba pode definir mais a mandíbula"], 
+                    "analise_pele": "Análise da textura e tom de pele para recomendações de skincare básico." 
                 },
                 "grafico_radar": { 
                     "simetria": (0-100), 
@@ -141,9 +159,9 @@ export async function POST(req: Request) {
                     "gordura_estimada": "Baixa" | "Média" | "Alta" 
                 },
                 "plano_harmonizacao": { 
-                    "passo_1_imediato": "Harmonização visual imediata", 
-                    "passo_2_rotina": "Protocolo de cuidados ou hábito", 
-                    "passo_3_longo_prazo": "Sugestão estética (não invasiva)" 
+                    "passo_1_imediato": "VISAGISMO: Ex: usar barba com degradê para alongar o rosto", 
+                    "passo_2_rotina": "CUIDADOS: Ex: hidratante facial e protetor solar diário", 
+                    "passo_3_longo_prazo": "ESTILO: Ex: investir em óculos com armação que suavize os traços" 
                 },
                 "analise_cromatica": {
                     "estacao": "Inverno Brilhante | Outono Escuro | Verão Suave | etc",
@@ -162,8 +180,9 @@ export async function POST(req: Request) {
                     "o_que_matou_o_look": "Ex: O cabelo muito lambido ressaltou a testa."
                 },
                 "sugestao_imediata": {
+                    "corte_ideal": "Ex: Corte com volume no topo para alongar o rosto",
                     "truque_de_5_minutos": "Ex: Solte dois fios na frente para suavizar o queixo.",
-                    "produto_chave": "Ex: Falta um blush cremoso para dar vida."
+                    "produto_chave": "Ex: Pomada matte para texturizar o cabelo."
                 },
                 "adaptacao_trend": "Se o usuário pediu uma tendência, explique como adaptar. Se não, dê uma dica de tendência atual."
             }`;
@@ -186,6 +205,19 @@ export async function POST(req: Request) {
             
             TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
 
+            ⛔ REGRAS ABSOLUTAS - PROIBIÇÕES:
+            - NUNCA sugira cirurgias plásticas (rinoplastia, bichectomia, lifting, etc)
+            - NUNCA sugira procedimentos invasivos (botox, preenchimento, harmonização facial médica)
+            - NUNCA mencione "corrigir" defeitos físicos permanentes
+            - Foque APENAS em VISAGISMO: como PARECER melhor através de estilo
+
+            ✅ EXEMPLOS DE SUGESTÕES VÁLIDAS:
+            - Corte de cabelo ideal para o formato
+            - Estilo de barba para definir a mandíbula
+            - Óculos que harmonizam o rosto
+            - Ângulos melhores para fotos
+            - Skincare básico (hidratante, protetor)
+
             ${metricsContext}
 
             DIRETRIZES DE ANÁLISE PROFUNDA (Chain of Thought):
@@ -198,16 +230,17 @@ export async function POST(req: Request) {
             {
                 "analise_geral": { 
                     "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA, nem todo mundo é 7+), 
-                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar com melhorias),
+                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar COM VISAGISMO),
                     "idade_real_estimada": (Número inteiro),
                     "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
+                    "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
                     "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
                 },
                 "rosto": { 
                     "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
                     "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "pontos_de_atencao": ["Assimetria 1", "Ponto 2"], 
-                    "analise_pele": "Análise dermatológica detalhada." 
+                    "pontos_de_atencao": ["Observação de visagismo - ex: barba pode definir mais a mandíbula", "Dica de estilo - ex: cabelo com volume no topo alonga o rosto"], 
+                    "analise_pele": "Análise da textura para recomendações de skincare básico (hidratante, protetor)." 
                 },
                 "grafico_radar": { 
                     "simetria": (0-100), 
@@ -221,9 +254,9 @@ export async function POST(req: Request) {
                     "gordura_estimada": "Baixa" | "Média" | "Alta" 
                 },
                  "plano_harmonizacao": { 
-                    "passo_1_imediato": "Harmonização visual imediata", 
-                    "passo_2_rotina": "Protocolo de cuidados ou hábito", 
-                    "passo_3_longo_prazo": "Sugestão estética" 
+                    "passo_1_imediato": "VISAGISMO: Ex: usar barba degradê para definir mandíbula", 
+                    "passo_2_rotina": "CUIDADOS: Ex: hidratante e protetor solar diário", 
+                    "passo_3_longo_prazo": "ESTILO: Ex: experimentar óculos com armação que suavize os traços" 
                 }
             }`;
         }
@@ -257,12 +290,11 @@ export async function POST(req: Request) {
             console.log(`🤖 TENTANDO MODELO: ${modelName}...`);
             const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`;
 
-            // Configura temperatura baseada no modelo? 
-            // Flash 2.0 é mais criativo, Pro é mais conservador.
-            // Vamos manter padronizado por enquanto.
+            // Configura temperatura e seed para resultados CONSISTENTES
+            // Importante: mesma foto = mesmo resultado (análise cromática, estilo, etc)
             const currentConfig = {
-                temperature: mode === "stylist" ? 0.7 : 0.4,
-                // Removido seed: 42 para permitir resultados variados entre diferentes rostos
+                temperature: 0.1, // Quase determinístico para consistência
+                seed: 42, // Seed fixo garante reprodutibilidade
             };
 
             // Injeta config no body (clone para não alterar o original se precisasse)

@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import {
     Lock, Crown, Sparkles, AlertTriangle, CheckCircle2, Zap,
     ScanFace, User, ArrowUp, ArrowDown, Star, XCircle,
-    Palette, Shirt, ShoppingBag, Ban, Glasses
+    Palette, Shirt, ShoppingBag, Ban, Glasses, ChevronDown
 } from 'lucide-react';
 import {
     Radar,
@@ -29,6 +29,7 @@ export default function VipScannerPage() {
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<any>(null);
     const [previousResult, setPreviousResult] = useState<any>(null);
+    const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
     // Initialize MediaPipe and Load Existing Data on mount
     useEffect(() => {
@@ -404,176 +405,59 @@ export default function VipScannerPage() {
 
                 {/* RESULT DASHBOARD */}
                 {result && (
-                    <div className="space-y-16 animate-fade-in">
+                    <div className="space-y-10 animate-fade-in">
 
-
-
-                        {/* 2. ANÁLISE GERAL */}
-                        <section className="space-y-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wider border-l-4 border-primary pl-4">
-                                ANÁLISE GERAL (FORENSE)
-                            </h2>
-                            <div className="relative bg-[#0A0A0A] border border-white/10 rounded-3xl p-8 md:p-12 pb-24 md:pb-32 overflow-hidden">
-                                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] opacity-20" />
-                                <div className="relative space-y-12">
-                                    <div className="space-y-3">
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-gray-400 font-medium text-sm tracking-wider uppercase">Sua Nota Atual</span>
-                                            <span className="text-3xl text-white font-bold font-mono tracking-tighter">{currentScore}</span>
-                                        </div>
-                                        <div className="h-6 bg-gray-900 rounded-full overflow-hidden relative shadow-inner border border-white/5">
-                                            <div className="h-full bg-gradient-to-r from-gray-600 to-gray-400 rounded-full relative" style={{ width: `${(currentScore / 10) * 100}%` }} />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 relative">
-                                        <div className="flex justify-between items-end">
-                                            <span className="text-primary font-bold text-sm tracking-wider uppercase drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]">Seu Potencial Máximo</span>
-                                            <span className="text-5xl text-primary font-black font-mono tracking-tighter drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]">{potentialScore}</span>
-                                        </div>
-                                        <div className="relative">
-                                            <div className="h-8 bg-gray-900/80 rounded-full overflow-hidden border border-white/10 shadow-inner">
-                                                <div className="h-full bg-gradient-to-r from-emerald-500 to-primary shadow-[0_0_30px_rgba(57,255,20,0.3)] rounded-full relative" style={{ width: `${(potentialScore / 10) * 100}%` }} />
-                                            </div>
-                                            <div className="absolute top-full mt-4 flex flex-col items-center z-20" style={{ left: `${(currentScore / 10) * 100 + ((potentialScore - currentScore) / 20) * 100}%`, transform: 'translateX(-50%)' }}>
-                                                <div className="w-px h-4 bg-gradient-to-b from-rose-500/50 to-rose-500 mb-1"></div>
-                                                <div className="bg-rose-500/10 backdrop-blur-md border border-rose-500/30 px-4 py-2 rounded-xl flex items-center gap-3 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[10px] text-rose-300 font-medium uppercase tracking-wider leading-none mb-1">Potencial Desperdiçado</span>
-                                                        <span className="text-lg font-bold text-rose-500 font-mono leading-none">+{gap} PONTOS</span>
-                                                    </div>
-                                                    <ArrowUp className="w-5 h-5 text-rose-500 animate-bounce" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 3. RADAR CHART */}
-                        <section className="space-y-8">
-                            <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
-                                ONDE ESTÃO SEUS <span className="text-primary">PONTOS CEGOS</span>
-                            </h2>
-                            <div className="w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '400px', width: '100%' }}>
-                                {radarData && radarData.length > 0 && (
-                                    <ResponsiveContainer width="100%" height={400}>
-                                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                                            <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 'bold' }} />
-                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                            <Radar name="Atual" dataKey="A" stroke="#ffffff" strokeWidth={2} fill="#ffffff" fillOpacity={0.1} />
-                                            <Radar name="Potencial" dataKey="B" stroke="#39FF14" strokeWidth={3} strokeDasharray="4 4" fill="#39FF14" fillOpacity={0.2} />
-                                        </RadarChart>
-                                    </ResponsiveContainer>
-                                )}
-                            </div>
-                        </section>
-
-                        {/* 4. UNLOCKED INSIGHTS */}
-                        <section className="space-y-6">
-                            <h2 className="text-2xl font-bold text-white tracking-wider border-l-4 border-yellow-500 pl-4">
-                                DIAGNÓSTICO COMPLETO (DESBLOQUEADO)
-                            </h2>
-
-                            <div className="grid gap-4">
-                                {/* Formato do Rosto */}
-                                <div className="bg-white/5 border border-primary/30 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <CheckCircle2 className="text-primary w-5 h-5 shrink-0" />
-                                        <div>
-                                            <h4 className="font-bold text-white">Formato do Rosto Detectado</h4>
-                                            <p className="text-sm text-gray-400">
-                                                {result?.rosto?.formato_rosto || "Analisando..."} - Análise Biométrica Concluída.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-mono bg-primary/20 text-primary px-2 py-1 rounded">CONFIRMADO</span>
-                                </div>
-
-                                {/* UNLOCKED ITEMS */}
-                                <div className="bg-white/5 border border-red-500/30 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <XCircle className="text-red-500 w-5 h-5 shrink-0" />
-                                        <div>
-                                            <h4 className="font-bold text-white">Pontos de Atenção</h4>
-                                            <p className="text-sm text-gray-400">{result.rosto?.pontos_de_atencao?.[0] || result.rosto?.falhas_criticas?.[0] || "Nenhum ponto maior detectado."}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
-                                </div>
-
-                                <div className="bg-white/5 border border-yellow-500/30 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <Star className="text-yellow-500 w-5 h-5 shrink-0" />
-                                        <div>
-                                            <h4 className="font-bold text-white">Realce Estratégico</h4>
-                                            <p className="text-sm text-gray-400">{result.sugestao_imediata?.produto_chave || result.plano_harmonizacao?.passo_1_imediato || result.plano_correcao?.passo_1_imediato}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
-                                </div>
-
-                                <div className="bg-white/5 border border-blue-500/30 p-4 rounded-xl flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <User className="text-blue-500 w-5 h-5 shrink-0" />
-                                        <div>
-                                            <h4 className="font-bold text-white">Harmonização Geral</h4>
-                                            <p className="text-sm text-gray-400">{result.plano_harmonizacao?.passo_3_longo_prazo || result.plano_correcao?.passo_3_longo_prazo || "Manter rotina de cuidados."}</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-xs font-mono bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">DESBLOQUEADO</span>
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* 5. ARQUÉTIPO */}
-                        <section className="space-y-8 pb-20">
-                            <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
-                                SEU <span className="text-primary">ARQUÉTIPO</span>
-                            </h2>
+                        {/* === 1. SEU ARQUÉTIPO - EGO/WOW EFFECT (First Thing User Sees) === */}
+                        <section className="space-y-6 mb-8">
                             <div className="relative max-w-sm mx-auto group">
-                                <div className="relative overflow-hidden rounded-3xl bg-black border border-white/10 shadow-[0_0_40px_rgba(57,255,20,0.1)] aspect-[9/16]">
+                                <div className="relative overflow-hidden rounded-3xl bg-black border border-white/10 shadow-[0_0_40px_rgba(234,179,8,0.15)] aspect-[9/16]">
                                     {faceImage && (
                                         <div className="absolute inset-0 z-0">
                                             <img src={faceImage} alt="User Background" className="w-full h-full object-cover opacity-40 blur-xl scale-110" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                                         </div>
                                     )}
+
                                     <div className="relative z-10 h-full flex flex-col justify-between p-8">
                                         <div className="flex justify-between items-start">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                                                    <span className="text-xs font-mono text-primary tracking-widest">PRIME AI VIP</span>
+                                                    <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                                                    <span className="text-xs font-mono text-yellow-400 tracking-widest">PRIME AI VIP</span>
                                                 </div>
-                                                <h3 className="text-3xl font-black text-white italic uppercase leading-none">{result.analise_geral?.arquetipo}</h3>
+                                                <h3 className="text-3xl font-black text-white italic uppercase leading-none">{result.analise_geral?.arquetipo || 'THE MAVERICK'}</h3>
                                             </div>
                                             <ScanFace className="w-8 h-8 text-white/50" />
                                         </div>
+
                                         <div className="flex-1 flex items-center justify-center">
                                             <div className="relative w-48 h-48">
-                                                <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full animate-pulse" />
+                                                <div className="absolute inset-0 bg-yellow-500/20 blur-[60px] rounded-full animate-pulse" />
                                                 {faceImage ? (
-                                                    <img src={faceImage} className="w-full h-full object-cover rounded-full grayscale contrast-150 border-4 border-white/10 mix-blend-luminosity" style={{ filter: 'brightness(0.7) contrast(1.5) grayscale(1)' }} />
+                                                    <img src={faceImage} className="w-full h-full object-cover rounded-full grayscale contrast-150 border-4 border-white/10" style={{ filter: 'brightness(0.7) contrast(1.5) grayscale(1)' }} />
                                                 ) : (
                                                     <User className="w-full h-full text-white/20" />
                                                 )}
-                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                    <span className="text-[10px] text-gray-400 uppercase tracking-wider">Nota Atual</span>
                                                     <span className="text-6xl font-black text-white drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">{currentScore}</span>
                                                 </div>
                                             </div>
                                         </div>
+
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md">
-                                                    <p className="text-[10px] text-gray-400 uppercase">Potencial</p>
-                                                    <p className="text-xl font-bold text-primary">{potentialScore}</p>
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                                                    <p className="text-[10px] text-gray-400 uppercase">Sua Nota</p>
+                                                    <p className="text-xl font-bold text-white">{currentScore}</p>
                                                 </div>
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-md">
-                                                    <p className="text-[10px] text-gray-400 uppercase">Raridade</p>
-                                                    <p className="text-xl font-bold text-white">TOP 5%</p>
+                                                <div className="bg-yellow-500/10 p-3 rounded-xl border border-yellow-500/30">
+                                                    <p className="text-[10px] text-yellow-400/80 uppercase">Pode Atingir</p>
+                                                    <p className="text-xl font-bold text-yellow-400">{potentialScore}</p>
                                                 </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-[10px] text-gray-500 font-mono">prime-ai.com</p>
                                             </div>
                                         </div>
                                     </div>
@@ -581,7 +465,233 @@ export default function VipScannerPage() {
                             </div>
                         </section>
 
-                        {/* 1. STYLIST SECTION (Moved to Bottom) */}
+                        {/* === 2. QUICK STATS - 4 Cards Grid === */}
+                        <section className="grid grid-cols-2 gap-4 mb-8">
+                            {/* Simetria */}
+                            <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-gray-400 text-xs">Simetria</span>
+                                    <Sparkles className="w-3.5 h-3.5 text-gray-600" />
+                                </div>
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className={`text-3xl font-bold ${(result.grafico_radar?.simetria || 75) >= 80 ? 'text-[#39FF14]' : (result.grafico_radar?.simetria || 75) >= 50 ? 'text-[#FFD60A]' : 'text-[#FF453A]'}`}>
+                                        {result.grafico_radar?.simetria || 75}
+                                    </span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded bg-white/5 ${(result.grafico_radar?.simetria || 75) >= 80 ? 'text-[#39FF14]' : (result.grafico_radar?.simetria || 75) >= 50 ? 'text-[#FFD60A]' : 'text-[#FF453A]'}`}>
+                                        {(result.grafico_radar?.simetria || 75) >= 80 ? 'Good' : (result.grafico_radar?.simetria || 75) >= 50 ? 'Moderate' : 'Poor'}
+                                    </span>
+                                </div>
+                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full ${(result.grafico_radar?.simetria || 75) >= 80 ? 'bg-[#39FF14]' : (result.grafico_radar?.simetria || 75) >= 50 ? 'bg-[#FFD60A]' : 'bg-[#FF453A]'}`} style={{ width: `${result.grafico_radar?.simetria || 75}%` }} />
+                                </div>
+                            </div>
+
+                            {/* Pele */}
+                            <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-gray-400 text-xs">Qualidade Pele</span>
+                                    <Sparkles className="w-3.5 h-3.5 text-gray-600" />
+                                </div>
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className={`text-3xl font-bold ${(result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 80 ? 'text-[#39FF14]' : (result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 50 ? 'text-[#FFD60A]' : 'text-[#FF453A]'}`}>
+                                        {result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80}
+                                    </span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded bg-white/5 ${(result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 80 ? 'text-[#39FF14]' : (result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 50 ? 'text-[#FFD60A]' : 'text-[#FF453A]'}`}>
+                                        {(result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 80 ? 'Good' : (result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 50 ? 'Moderate' : 'Poor'}
+                                    </span>
+                                </div>
+                                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                    <div className={`h-full rounded-full ${(result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 80 ? 'bg-[#39FF14]' : (result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80) >= 50 ? 'bg-[#FFD60A]' : 'bg-[#FF453A]'}`} style={{ width: `${result.grafico_radar?.qualidade_pele || result.grafico_radar?.pele || 80}%` }} />
+                                </div>
+                            </div>
+
+                            {/* Erros - PAIN POINT */}
+                            <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-rose-500/20">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-rose-400 text-xs font-medium">Pontos de Atenção</span>
+                                    <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                                </div>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-3xl font-bold text-rose-500">{result.rosto?.pontos_de_atencao?.length || 0}</span>
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded text-rose-400 bg-rose-500/10">
+                                        {(result.rosto?.pontos_de_atencao?.length || 0) > 0 ? 'Detectados' : 'Nenhum'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Formato */}
+                            <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-gray-400 text-xs">Formato Rosto</span>
+                                    <ScanFace className="w-3.5 h-3.5 text-gray-600" />
+                                </div>
+                                <span className="text-2xl font-bold text-white">{result.rosto?.formato_rosto || 'Oval'}</span>
+                            </div>
+                        </section>
+
+                        {/* === 3. RADAR CHART (Pontos Cegos) === */}
+                        <section className="space-y-6">
+                            <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
+                                ONDE ESTÃO SEUS <span className="text-yellow-400">PONTOS CEGOS</span>
+                            </h2>
+
+                            <div className="w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '350px' }}>
+                                {radarData && radarData.length > 0 && (
+                                    <ResponsiveContainer width="100%" height={350}>
+                                        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                                            <PolarGrid stroke="rgba(255,255,255,0.1)" />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 'bold' }} />
+                                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                            <Radar name="Atual" dataKey="A" stroke="#ffffff" strokeWidth={2} fill="#ffffff" fillOpacity={0.1} />
+                                            <Radar name="Potencial" dataKey="B" stroke="#EAB308" strokeWidth={3} strokeDasharray="4 4" fill="#EAB308" fillOpacity={0.2} />
+                                        </RadarChart>
+                                    </ResponsiveContainer>
+                                )}
+
+                                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-6 text-sm font-mono">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-white/20 border border-white rounded-full" />
+                                        <span className="text-gray-400">Atual</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 bg-yellow-500/20 border border-yellow-500 border-dashed rounded-full" />
+                                        <span className="text-yellow-400 font-bold">Potencial</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* === 4. INSIGHTS (Expandable Boxes - DESBLOQUEADOS) === */}
+                        <section className="space-y-4">
+                            <h2 className="text-xl font-bold text-white tracking-wider border-l-4 border-yellow-500 pl-4">
+                                INSIGHTS <span className="text-yellow-400">(VIP)</span>
+                            </h2>
+
+                            {/* Positivos - Expandable */}
+                            <div className="bg-[#1C1C1E] rounded-2xl border border-yellow-500/30 overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedSection(expandedSection === 'positives' ? null : 'positives')}
+                                    className="w-full p-4 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-4 h-4 text-yellow-400" />
+                                        <span className="text-white font-medium">Positivos</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">VIP</span>
+                                        <ChevronDown className={`w-5 h-5 text-yellow-400 transition-transform ${expandedSection === 'positives' ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </button>
+                                {expandedSection === 'positives' && (
+                                    <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">Formato de rosto: {result?.rosto?.formato_rosto || 'Oval'}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">Simetria facial de {result.grafico_radar?.simetria || 75}%</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">Alto potencial de melhoria (+{gap} pontos)</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pontos de Atenção - Expandable UNLOCKED */}
+                            <div className="bg-[#1C1C1E] rounded-2xl border border-red-500/30 overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedSection(expandedSection === 'negatives' ? null : 'negatives')}
+                                    className="w-full p-4 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="w-4 h-4 text-red-400" />
+                                        <span className="text-white font-medium">Pontos de Atenção</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">VIP</span>
+                                        <ChevronDown className={`w-5 h-5 text-red-400 transition-transform ${expandedSection === 'negatives' ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </button>
+                                {expandedSection === 'negatives' && (
+                                    <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+                                        {result.rosto?.pontos_de_atencao?.map((ponto: string, i: number) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                                <span className="text-gray-300 text-sm">{ponto}</span>
+                                            </div>
+                                        )) || (
+                                                <div className="flex items-start gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                                    <span className="text-gray-300 text-sm">Nenhum ponto crítico detectado</span>
+                                                </div>
+                                            )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Corte de Cabelo Ideal - Expandable UNLOCKED */}
+                            <div className="bg-[#1C1C1E] rounded-2xl border border-yellow-500/30 overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedSection(expandedSection === 'haircut' ? null : 'haircut')}
+                                    className="w-full p-4 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Sparkles className="w-4 h-4 text-yellow-400" />
+                                        <span className="text-white font-medium">Corte de Cabelo Ideal</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">VIP</span>
+                                        <ChevronDown className={`w-5 h-5 text-yellow-400 transition-transform ${expandedSection === 'haircut' ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </button>
+                                {expandedSection === 'haircut' && (
+                                    <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">{result.sugestao_imediata?.corte_ideal || result.plano_harmonizacao?.passo_1_imediato || 'Corte que valorize seu formato de rosto'}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">{result.sugestao_imediata?.produto_chave || 'Produtos para volume e textura'}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Sugestões de Estilo - Expandable UNLOCKED */}
+                            <div className="bg-[#1C1C1E] rounded-2xl border border-yellow-500/30 overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedSection(expandedSection === 'style' ? null : 'style')}
+                                    className="w-full p-4 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-yellow-400" />
+                                        <span className="text-white font-medium">Sugestões de Estilo</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">VIP</span>
+                                        <ChevronDown className={`w-5 h-5 text-yellow-400 transition-transform ${expandedSection === 'style' ? 'rotate-180' : ''}`} />
+                                    </div>
+                                </button>
+                                {expandedSection === 'style' && (
+                                    <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">{result.plano_harmonizacao?.passo_2_medio_prazo || 'Investir em peças que destaquem seus pontos fortes'}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">{result.plano_harmonizacao?.passo_3_longo_prazo || 'Manter rotina de cuidados com a pele'}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* === 5. STYLIST SECTION (PREMIUM) === */}
                         <section className="space-y-8">
                             <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wider border-l-4 border-yellow-500 pl-4">
                                 CONSULTORIA DE ESTILO <span className="text-yellow-500 text-base align-middle ml-2 border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 rounded-full">PREMIUM</span>

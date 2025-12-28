@@ -9,6 +9,15 @@ import { ArrowRight, ScanLine, ShieldCheck, Zap, Crown, CheckCircle2 } from "luc
 
 export default function Home() {
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [showTermsWarning, setShowTermsWarning] = useState(false);
+
+  const handleScanClick = (e: React.MouseEvent) => {
+    if (!acceptedPrivacy) {
+      e.preventDefault();
+      setShowTermsWarning(true);
+      setTimeout(() => setShowTermsWarning(false), 3000);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-primary selection:text-black">
@@ -43,21 +52,46 @@ export default function Home() {
                 onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               />
               <label htmlFor="privacy" className="text-xs text-gray-400 cursor-pointer select-none">
-                Li e concordo com os Termos de Uso e Política de Privacidade.
+                Li e concordo com os <span className="text-primary">Termos de Uso</span> e <span className="text-primary">Política de Privacidade</span>.
               </label>
             </div>
 
             <div className="flex flex-col items-center gap-4">
-              <Link href={acceptedPrivacy ? "/scan" : "#"}>
+              <Link href={acceptedPrivacy ? "/scan" : "#"} onClick={handleScanClick}>
                 <Button
                   size="lg"
-                  className={`group text-lg h-16 px-8 transition-all duration-300 ${!acceptedPrivacy ? 'opacity-50 pointer-events-none' : ''}`}
-                  disabled={!acceptedPrivacy}
+                  className="group text-lg h-16 px-8 transition-all duration-300"
                 >
                   ESCANEAR AGORA
                   <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
                 </Button>
               </Link>
+
+              {/* Modal de Aviso */}
+              {showTermsWarning && (
+                <>
+                  {/* Overlay */}
+                  <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                    onClick={() => setShowTermsWarning(false)}
+                  />
+                  {/* Modal */}
+                  <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 animate-[scaleIn_0.2s_ease-out]">
+                    <div className="px-8 py-6 rounded-2xl bg-black border border-primary/50 shadow-[0_0_40px_rgba(57,255,20,0.15)] text-center max-w-sm">
+                      <p className="text-lg font-medium text-white mb-2">Aceite os termos</p>
+                      <p className="text-sm text-gray-400">
+                        Você deve aceitar os <span className="text-primary">Termos de Uso</span> e a <span className="text-primary">Política de Privacidade</span> antes de continuar.
+                      </p>
+                      <button
+                        onClick={() => setShowTermsWarning(false)}
+                        className="mt-5 px-6 py-2 rounded-lg bg-primary text-black font-bold text-sm hover:bg-primary/90 transition-colors"
+                      >
+                        ENTENDI
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
               <Link href="/vip-scanner">
                 <Button
