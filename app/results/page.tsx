@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import html2canvas from "html2canvas";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
+import { BadgeGrid, NewBadgePopup } from "@/components/ui/BadgeCard";
+import { useBadges, Badge } from "@/lib/hooks/useBadges";
 import {
     Star,
     ScanFace,
@@ -20,7 +23,9 @@ import {
     ChevronDown,
     Sparkles,
     AlertTriangle,
-    Info
+    Info,
+    Trophy,
+    History
 } from "lucide-react";
 import {
     Radar,
@@ -42,7 +47,11 @@ export default function ResultsPage() {
     const [result, setResult] = useState<any>(null);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [newBadge, setNewBadge] = useState<Badge | null>(null);
+    const [hasSaved, setHasSaved] = useState(false);
     const shareCardRef = useRef<HTMLDivElement>(null);
+
+    const { badges, checkAndUnlockBadges, getUnlockedBadges, getBadgeStats } = useBadges();
 
     // Function to save share card as image
     const saveShareCard = async () => {
@@ -100,6 +109,23 @@ export default function ResultsPage() {
             setResult(parsed);
         }
     }, []);
+
+    // Verificar badges quando resultado carrega
+    useEffect(() => {
+        if (result && !hasSaved) {
+            setHasSaved(true);
+            // Verificar badges
+            setTimeout(() => {
+                const newBadges = checkAndUnlockBadges([], result);
+                if (newBadges.length > 0) {
+                    const badge = badges.find(b => b.id === newBadges[0]);
+                    if (badge) {
+                        setNewBadge({ ...badge, unlocked: true });
+                    }
+                }
+            }, 500);
+        }
+    }, [result, hasSaved, checkAndUnlockBadges, badges]);
 
     const checkoutLinks: { [key: string]: string } = {
         "Oval": "https://pay.kiwify.com.br/jA1VCkP",
@@ -169,8 +195,16 @@ export default function ResultsPage() {
     const symmetryColor = getScoreColor(symmetryScore);
     const skinColor = getScoreColor(skinScore);
 
+    const badgeStats = getBadgeStats();
+    const unlockedBadges = getUnlockedBadges();
+
     return (
         <main className="min-h-screen bg-[#050505] text-white relative overflow-x-hidden font-sans selection:bg-primary selection:text-black">
+            {/* Badge Popup */}
+            {newBadge && (
+                <NewBadgePopup badge={newBadge} onClose={() => setNewBadge(null)} />
+            )}
+
             {/* Background */}
             <div className="fixed inset-0 bg-[linear-gradient(rgba(57,255,20,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(57,255,20,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
             <div className="fixed inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
@@ -497,3 +531,4 @@ export default function ResultsPage() {
         </main >
     );
 }
+

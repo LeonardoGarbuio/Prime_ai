@@ -62,17 +62,42 @@ export async function POST(req: Request) {
         let metricsContext = "";
         const hasDetailedMetrics = metrics && metrics.formato_rosto;
 
+        // Função para normalizar formato do rosto (MAIÚSCULAS -> Title Case)
+        const normalizeShape = (shape: string): string => {
+            if (!shape) return "Oval";
+            const lower = shape.toLowerCase();
+            // Mapeia formatos especiais
+            const map: { [key: string]: string } = {
+                'oval': 'Oval',
+                'redondo': 'Redondo',
+                'quadrado': 'Quadrado',
+                'retangular': 'Quadrado', // Retangular é variante de Quadrado
+                'oblongo': 'Oval', // Oblongo é variante alongada de Oval
+                'coracao': 'Coração',
+                'coração': 'Coração',
+                'triangular': 'Triângulo',
+                'triangulo': 'Triângulo',
+                'triângulo': 'Triângulo',
+                'triangular_invertido': 'Coração', // Triângulo invertido = Coração
+                'diamante': 'Diamante',
+            };
+            return map[lower] || shape.charAt(0).toUpperCase() + shape.slice(1).toLowerCase();
+        };
+
+        // Formato normalizado para consistência
+        const normalizedShape = hasDetailedMetrics ? normalizeShape(metrics.formato_rosto) : null;
+
         if (hasDetailedMetrics) {
             metricsContext = `
             📊 DADOS TÉCNICOS (VERDADE ABSOLUTA - USE ISTO):
-            - Formato Principal: ${metrics.formato_rosto} (Confiança: ${metrics.confianca}%)
-            - Segunda Opção: ${metrics.segunda_opcao || "N/A"} (Confiança: ${metrics.confianca_segunda || 0}%)
+            - Formato Principal: ${normalizedShape} (Confiança: ${metrics.confianca}%)
+            - Segunda Opção: ${metrics.segunda_opcao ? normalizeShape(metrics.segunda_opcao) : "N/A"} (Confiança: ${metrics.confianca_segunda || 0}%)
             - Ângulo Mandíbula: ${(metrics.angulo_mandibula_medio || 0).toFixed(1)}°
             - Proporção Altura/Largura: ${(metrics.prop_altura_largura || 0).toFixed(2)}
             - Índice de Afilamento: ${(metrics.indice_afilamento || 0).toFixed(1)}%
             - SCORE GEOMÉTRICO (BEAUTY SCORE): ${metrics.beauty_score || "N/A"}
             
-            INSTRUÇÃO CRÍTICA: O formato do rosto É ${metrics.formato_rosto}. Não tente adivinhar outro.
+            INSTRUÇÃO CRÍTICA: O formato do rosto É ${normalizedShape}. Não tente adivinhar outro. Use EXATAMENTE esse valor.
             INSTRUÇÃO CRÍTICA: A "Nota do Look" DEVE ser EXATAMENTE ${metrics.beauty_score} (se disponível). Se não, calcule com base na geometria.
             `;
         }
@@ -539,16 +564,17 @@ export async function POST(req: Request) {
 
         // --- SAFETY NET: GARANTIR CONSISTÊNCIA ---
         // Se tivermos métricas, forçamos o resultado da IA a respeitá-las
-        if (hasDetailedMetrics) {
+        if (hasDetailedMetrics && normalizedShape) {
             if (aiResult.rosto) {
-                aiResult.rosto.formato_rosto = metrics.formato_rosto;
+                aiResult.rosto.formato_rosto = normalizedShape; // USA O FORMATO NORMALIZADO!
+                aiResult.rosto.formato_original_mediapipe = metrics.formato_rosto; // Debug
                 aiResult.rosto.confianca = `${metrics.confianca}%`;
 
                 // Injetar dados técnicos
                 aiResult.rosto.dados_tecnicos = {
                     angulo_mandibula: metrics.angulo_mandibula_medio,
                     indice_afilamento: metrics.indice_afilamento,
-                    segunda_opcao: metrics.segunda_opcao
+                    segunda_opcao: metrics.segunda_opcao ? normalizeShape(metrics.segunda_opcao) : null
                 };
             }
 
