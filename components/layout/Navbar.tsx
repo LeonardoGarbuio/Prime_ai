@@ -14,10 +14,8 @@ export function Navbar() {
             </Link>
 
             <div className="hidden md:flex items-center gap-6 text-sm text-gray-400 font-mono">
-                <Link href="#" className="hover:text-white transition-colors">COMO FUNCIONA</Link>
-                <Link href="#" className="hover:text-white transition-colors">RESULTADOS</Link>
-
-                <Link href="/scan" className="text-primary hover:text-primary/80 transition-colors">LOGIN</Link>
+                <a href="/#como-funciona" className="hover:text-white transition-colors">COMO FUNCIONA</a>
+                <Link href="/vip-scanner" className="text-primary hover:text-primary/80 transition-colors">VIP</Link>
             </div>
         </nav>
     );
