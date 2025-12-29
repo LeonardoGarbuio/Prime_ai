@@ -463,18 +463,79 @@ export async function POST(req: Request) {
         const data = await genResp.json();
         const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-        // Extração de JSON
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        console.log("📝 RAW TEXT LENGTH:", rawText.length);
+
+        // === LIMPEZA ROBUSTA DO JSON ===
+        // 1. Remove markdown code blocks (```json ... ```)
+        let cleanedText = rawText
+            .replace(/```json\s*/gi, '')
+            .replace(/```\s*/g, '')
+            .trim();
+
+        // 2. Extração de JSON com regex melhorada
+        // Encontra o primeiro { e o último } correspondente
+        let jsonMatch = null;
+        let braceCount = 0;
+        let startIdx = -1;
+        let endIdx = -1;
+
+        for (let i = 0; i < cleanedText.length; i++) {
+            if (cleanedText[i] === '{') {
+                if (startIdx === -1) startIdx = i;
+                braceCount++;
+            } else if (cleanedText[i] === '}') {
+                braceCount--;
+                if (braceCount === 0 && startIdx !== -1) {
+                    endIdx = i;
+                    break;
+                }
+            }
+        }
+
+        if (startIdx !== -1 && endIdx !== -1) {
+            jsonMatch = cleanedText.substring(startIdx, endIdx + 1);
+        }
 
         if (!jsonMatch) {
-            console.error("IA respondeu texto sem JSON:", rawText);
+            // Fallback: regex simples
+            const regexMatch = cleanedText.match(/\{[\s\S]*\}/);
+            jsonMatch = regexMatch ? regexMatch[0] : null;
+        }
+
+        if (!jsonMatch) {
+            console.error("IA respondeu texto sem JSON:", rawText.substring(0, 500));
             throw new Error("Formato inválido na resposta da IA");
         }
 
-        const cleanJson = jsonMatch[0];
-        console.log(`📝 JSON (${mode}) Gerado com Sucesso.`);
+        // 3. Limpa caracteres problemáticos
+        const cleanJson = jsonMatch
+            .replace(/[\x00-\x1F\x7F]/g, ' ') // Remove control characters
+            .replace(/,\s*}/g, '}')           // Remove trailing commas
+            .replace(/,\s*]/g, ']');          // Remove trailing commas em arrays
 
-        const aiResult = JSON.parse(cleanJson);
+        console.log(`📝 JSON (${mode}) Extraído: ${cleanJson.length} chars`);
+
+        let aiResult;
+        try {
+            aiResult = JSON.parse(cleanJson);
+        } catch (parseError: any) {
+            console.error("❌ JSON Parse Error:", parseError.message);
+            console.error("❌ JSON (primeiros 500 chars):", cleanJson.substring(0, 500));
+
+            // Última tentativa: remover qualquer coisa após o último }
+            const lastBrace = cleanJson.lastIndexOf('}');
+            if (lastBrace > 0) {
+                const truncatedJson = cleanJson.substring(0, lastBrace + 1);
+                try {
+                    aiResult = JSON.parse(truncatedJson);
+                    console.log("✅ JSON recuperado após truncamento");
+                } catch {
+                    throw new Error(`JSON inválido: ${parseError.message}`);
+                }
+            } else {
+                throw new Error(`JSON inválido: ${parseError.message}`);
+            }
+        }
 
         // --- SAFETY NET: GARANTIR CONSISTÊNCIA ---
         // Se tivermos métricas, forçamos o resultado da IA a respeitá-las
