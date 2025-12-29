@@ -120,22 +120,33 @@ export default function VipScannerPage() {
             const data = await response.json();
             console.log("VIP Analysis Data (New):", data);
 
-            // MERGE Logic: Preserve core metrics from the original forensic analysis if they exist
-            // This ensures that Face Shape, Scores, and Radar Chart remain 100% consistent.
-            const mergedResult = {
-                ...data,
-                analise_geral: {
-                    ...data.analise_geral,
-                    // Prefer existing score/archetype if available, otherwise use new
-                    nota_final: previousResult?.analise_geral?.nota_final || data.analise_geral?.nota_final,
-                    arquetipo: previousResult?.analise_geral?.arquetipo || data.analise_geral?.arquetipo,
-                },
-                rosto: {
-                    ...data.rosto,
-                    formato_rosto: previousResult?.rosto?.formato_rosto || data.rosto?.formato_rosto,
-                },
-                grafico_radar: previousResult?.grafico_radar || data.grafico_radar // Keep the exact same chart
-            };
+            // MERGE TOTAL: Se existe análise anterior (normal), usa TODOS os dados base dela
+            // Isso garante 100% de consistência entre VIP e Normal
+            const hasExistingAnalysis = previousResult?.analise_geral?.nota_final;
+
+            let mergedResult;
+
+            if (hasExistingAnalysis) {
+                console.log("🔄 Usando dados BASE da análise anterior para consistência");
+                mergedResult = {
+                    // Dados de ESTILO vêm da nova análise VIP
+                    analise_cromatica: data.analise_cromatica,
+                    guia_vestuario: data.guia_vestuario,
+                    feedback_rapido: data.feedback_rapido,
+                    sugestao_imediata: data.sugestao_imediata,
+                    adaptacao_trend: data.adaptacao_trend,
+                    plano_harmonizacao: data.plano_harmonizacao || previousResult?.plano_harmonizacao,
+
+                    // Dados BASE vêm da análise ANTERIOR (normal) - 100% consistentes
+                    analise_geral: previousResult.analise_geral,
+                    rosto: previousResult.rosto,
+                    grafico_radar: previousResult.grafico_radar,
+                    corpo_postura: previousResult.corpo_postura || data.corpo_postura,
+                };
+            } else {
+                console.log("⚡ Primeira análise - usando dados da API diretamente");
+                mergedResult = data;
+            }
 
             console.log("✨ Merged VIP Result:", mergedResult);
             setResult(mergedResult);
