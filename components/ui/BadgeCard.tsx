@@ -7,7 +7,7 @@ export interface Badge {
     description: string;
     icon: string;
     unlocked: boolean;
-    unlockedAt?: Date;
+    unlockedAt?: string;
 }
 
 interface BadgeCardProps {
