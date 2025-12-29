@@ -1,6 +1,14 @@
 "use client";
 
-import { Badge } from "@/lib/types/history";
+// Badge type defined locally since history feature was removed
+export interface Badge {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    unlocked: boolean;
+    unlockedAt?: Date;
+}
 
 interface BadgeCardProps {
     badge: Badge;
@@ -25,8 +33,8 @@ export function BadgeCard({ badge, size = "md", showDescription = true }: BadgeC
         <div className={`flex flex-col items-center gap-2 ${badge.unlocked ? '' : 'opacity-40 grayscale'}`}>
             <div
                 className={`${sizeClasses[size]} rounded-2xl flex items-center justify-center transition-all ${badge.unlocked
-                        ? 'bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 shadow-[0_0_20px_rgba(57,255,20,0.15)]'
-                        : 'bg-white/5 border border-white/10'
+                    ? 'bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 shadow-[0_0_20px_rgba(57,255,20,0.15)]'
+                    : 'bg-white/5 border border-white/10'
                     }`}
             >
                 <span>{badge.icon}</span>
