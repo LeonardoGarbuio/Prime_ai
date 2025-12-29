@@ -43,6 +43,22 @@ const getScoreColor = (score: number) => {
     return { text: "text-[#FF453A]", bg: "bg-[#FF453A]", label: "Poor" };
 };
 
+// Format face shape for display (fix Portuguese characters)
+const formatFaceShape = (shape: string) => {
+    const shapeMap: { [key: string]: string } = {
+        'CORACAO': 'CORAÇÃO',
+        'TRIANGULAR_INVERTIDO': 'TRIÂNGULO INVERTIDO',
+        'RETANGULAR': 'RETANGULAR',
+        'QUADRADO': 'QUADRADO',
+        'DIAMANTE': 'DIAMANTE',
+        'TRIANGULAR': 'TRIANGULAR',
+        'REDONDO': 'REDONDO',
+        'OBLONGO': 'OBLONGO',
+        'OVAL': 'OVAL'
+    };
+    return shapeMap[shape?.toUpperCase()] || shape;
+};
+
 export default function ResultsPage() {
     const [result, setResult] = useState<any>(null);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
@@ -331,7 +347,7 @@ export default function ResultsPage() {
                             <span className="text-gray-400 text-xs">Formato Rosto</span>
                             <ScanFace className="w-3.5 h-3.5 text-gray-600" />
                         </div>
-                        <span className="text-2xl font-bold text-white">{faceShape}</span>
+                        <span className="text-2xl font-bold text-white">{formatFaceShape(faceShape)}</span>
                     </div>
                 </section>
 

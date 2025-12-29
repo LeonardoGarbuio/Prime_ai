@@ -20,6 +20,22 @@ import {
 } from 'recharts';
 import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
 
+// Format face shape for display (fix Portuguese characters)
+const formatFaceShape = (shape: string) => {
+    const shapeMap: { [key: string]: string } = {
+        'CORACAO': 'CORAÇÃO',
+        'TRIANGULAR_INVERTIDO': 'TRIÂNGULO INVERTIDO',
+        'RETANGULAR': 'RETANGULAR',
+        'QUADRADO': 'QUADRADO',
+        'DIAMANTE': 'DIAMANTE',
+        'TRIANGULAR': 'TRIANGULAR',
+        'REDONDO': 'REDONDO',
+        'OBLONGO': 'OBLONGO',
+        'OVAL': 'OVAL'
+    };
+    return shapeMap[shape?.toUpperCase()] || shape;
+};
+
 export default function VipScannerPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [passwordInput, setPasswordInput] = useState("");
@@ -536,7 +552,7 @@ export default function VipScannerPage() {
                                     <span className="text-gray-400 text-xs">Formato Rosto</span>
                                     <ScanFace className="w-3.5 h-3.5 text-gray-600" />
                                 </div>
-                                <span className="text-2xl font-bold text-white">{result.rosto?.formato_rosto || 'Oval'}</span>
+                                <span className="text-2xl font-bold text-white">{formatFaceShape(result.rosto?.formato_rosto || 'Oval')}</span>
                             </div>
                         </section>
 
@@ -597,7 +613,7 @@ export default function VipScannerPage() {
                                     <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
                                         <div className="flex items-start gap-2">
                                             <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">Formato de rosto: {result?.rosto?.formato_rosto || 'Oval'}</span>
+                                            <span className="text-gray-300 text-sm">Formato de rosto: {formatFaceShape(result?.rosto?.formato_rosto || 'Oval')}</span>
                                         </div>
                                         <div className="flex items-start gap-2">
                                             <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
