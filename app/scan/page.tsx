@@ -6,12 +6,17 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { Button } from "@/components/ui/Button";
-import { ArrowRight, AlertCircle, ScanFace, User } from "lucide-react";
+import { ArrowRight, AlertCircle, ScanFace, User, Crown, Sparkles } from "lucide-react";
+import { useApiLimiter } from "@/lib/hooks/useApiLimiter";
+import Link from "next/link";
 
 export default function ScanPage() {
     const router = useRouter();
     const [faceFile, setFaceFile] = useState<File | null>(null);
     const [bodyFile, setBodyFile] = useState<File | null>(null);
+
+    const { getRemainingUses, isPro, maxFreeUses, isLoaded, canUseApi } = useApiLimiter();
+    const remainingUses = getRemainingUses();
 
     const handleAnalyze = async () => {
         if (!faceFile) return;
@@ -81,6 +86,31 @@ export default function ScanPage() {
                     <p className="text-gray-400 max-w-lg mx-auto">
                         Para uma análise precisa, precisamos de uma foto do rosto (sem óculos) e uma do corpo (opcional para análise postural).
                     </p>
+
+                    {/* ===== INDICADOR DE ANÁLISES RESTANTES ===== */}
+                    {isLoaded && (
+                        <div className="flex justify-center pt-2">
+                            {isPro ? (
+                                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-bold">
+                                    <Crown className="w-4 h-4" />
+                                    VIP • Análises Ilimitadas
+                                </div>
+                            ) : (
+                                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-mono ${remainingUses > 2
+                                        ? "bg-primary/10 border border-primary/30 text-primary"
+                                        : remainingUses > 0
+                                            ? "bg-orange-500/10 border border-orange-500/30 text-orange-400"
+                                            : "bg-red-500/10 border border-red-500/30 text-red-400"
+                                    }`}>
+                                    <Sparkles className="w-4 h-4" />
+                                    {remainingUses > 0
+                                        ? `${remainingUses}/${maxFreeUses} análises grátis restantes`
+                                        : "Limite grátis atingido"
+                                    }
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid gap-8 md:grid-cols-2 mb-12">
@@ -115,16 +145,44 @@ export default function ScanPage() {
                     </div>
                 </div>
 
-                <div className="flex justify-center">
-                    <Button
-                        size="lg"
-                        className="w-full md:w-auto min-w-[200px]"
-                        disabled={!faceFile}
-                        onClick={handleAnalyze}
-                    >
-                        INICIAR ANÁLISE
-                        <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                <div className="flex flex-col items-center gap-4">
+                    {/* Botão principal ou aviso de limite */}
+                    {!isLoaded || canUseApi() ? (
+                        <Button
+                            size="lg"
+                            className="w-full md:w-auto min-w-[200px]"
+                            disabled={!faceFile}
+                            onClick={handleAnalyze}
+                        >
+                            INICIAR ANÁLISE
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                        </Button>
+                    ) : (
+                        <div className="text-center space-y-4">
+                            <p className="text-red-400 text-sm">
+                                Você atingiu o limite de {maxFreeUses} análises grátis.
+                            </p>
+                            <Link href="/vip-scanner">
+                                <Button
+                                    size="lg"
+                                    className="bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-bold"
+                                >
+                                    <Crown className="w-5 h-5 mr-2" />
+                                    DESBLOQUEAR VIP
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
+
+                    {/* Link para VIP se ainda tem análises */}
+                    {isLoaded && !isPro && remainingUses > 0 && remainingUses <= 3 && (
+                        <Link href="/vip-scanner" className="text-xs text-gray-500 hover:text-yellow-400 transition-colors">
+                            <span className="flex items-center gap-1">
+                                <Crown className="w-3 h-3" />
+                                Quer análises ilimitadas? Seja VIP
+                            </span>
+                        </Link>
+                    )}
                 </div>
             </div>
             <Footer />

@@ -2,10 +2,13 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { BrainCircuit, ScanFace, Activity, CheckCircle2 } from "lucide-react";
+import { BrainCircuit, ScanFace, Activity, CheckCircle2, Crown, Lock } from "lucide-react";
 import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
+import { useApiLimiter } from "@/lib/hooks/useApiLimiter";
+import { Button } from "@/components/ui/Button";
 
 const STEPS = [
     { label: "Mapeando 120 pontos faciais...", duration: 1500, icon: ScanFace },
@@ -15,17 +18,32 @@ const STEPS = [
     { label: "Gerando Dossiê Prime AI...", duration: 1000, icon: CheckCircle2 },
 ];
 
+// Passos mais curtos quando resultado vem do cache
+const CACHE_STEPS = [
+    { label: "Verificando dados...", duration: 500, icon: ScanFace },
+    { label: "Carregando resultado...", duration: 500, icon: CheckCircle2 },
+];
+
 export default function AnalyzingPage() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [progress, setProgress] = useState(0);
     const [userImage, setUserImage] = useState<string | null>(null);
-
-
-
-    // ... imports
+    const [limitReached, setLimitReached] = useState(false);
+    const [isFromCache, setIsFromCache] = useState(false);
 
     const analyzingRef = useRef(false);
+
+    // Hook de limites e cache
+    const {
+        checkCache,
+        saveToCache,
+        canUseApi,
+        incrementUsage,
+        getRemainingUses,
+        isLoaded,
+        isPro
+    } = useApiLimiter();
 
     // Initialize MediaPipe on mount
     useEffect(() => {
@@ -33,6 +51,9 @@ export default function AnalyzingPage() {
     }, []);
 
     useEffect(() => {
+        // Aguardar hook carregar
+        if (!isLoaded) return;
+
         const analyzeImages = async () => {
             if (analyzingRef.current) return;
             analyzingRef.current = true;
@@ -47,7 +68,34 @@ export default function AnalyzingPage() {
 
             setUserImage(faceImage);
 
-            // Create a promise that resolves when the animation is done
+            // ===== 1. VERIFICAR CACHE PRIMEIRO =====
+            const cachedResult = await checkCache(faceImage);
+
+            if (cachedResult) {
+                console.log("🚀 Usando resultado do CACHE!");
+                setIsFromCache(true);
+
+                // Animação rápida para cache
+                for (let i = 0; i < CACHE_STEPS.length; i++) {
+                    setCurrentStep(i);
+                    setProgress(Math.round(((i + 1) / CACHE_STEPS.length) * 100));
+                    await new Promise(r => setTimeout(r, CACHE_STEPS[i].duration));
+                }
+
+                localStorage.setItem("analysisResult", JSON.stringify(cachedResult));
+                router.push("/results");
+                return;
+            }
+
+            // ===== 2. VERIFICAR LIMITE DE USO =====
+            if (!canUseApi()) {
+                console.log("🚫 Limite de uso atingido!");
+                setLimitReached(true);
+                return;
+            }
+
+            // ===== 3. ANÁLISE NORMAL =====
+            // Animation promise
             const animationPromise = new Promise<void>(async (resolve) => {
                 for (let i = 0; i < STEPS.length; i++) {
                     setCurrentStep(i);
@@ -74,23 +122,20 @@ export default function AnalyzingPage() {
                     faceDetected = true;
                     metrics = calculateFaceMetrics(landmarks);
                     const beautyScore = calculateBeautyScore(landmarks);
-                    metrics = { ...metrics, beauty_score: beautyScore }; // Inject score into metrics
+                    metrics = { ...metrics, beauty_score: beautyScore };
                     console.log("✅ MediaPipe Metrics:", metrics);
-                    console.log("✨ Deterministic Beauty Score:", beautyScore);
                 } else {
                     console.warn("⚠️ No landmarks detected by MediaPipe");
                 }
             } catch (e: any) {
                 console.error("❌ MediaPipe Error:", e);
-                // If the error is specifically about no face detected, stop the process
                 if (e.message && e.message.includes("rosto")) {
-                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto (não use fotos de animais, objetos ou memes).");
+                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto.");
                     router.push("/scan");
                     return;
                 }
             }
 
-            // If MediaPipe didn't detect a face, stop the process
             if (!faceDetected) {
                 alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto.");
                 router.push("/scan");
@@ -101,23 +146,28 @@ export default function AnalyzingPage() {
             const apiPromise = fetch("/api/analyze", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ faceImage, bodyImage, metrics }), // Sending metrics!
+                body: JSON.stringify({ faceImage, bodyImage, metrics }),
             })
                 .then(async (res) => {
                     if (!res.ok) {
                         const errorText = await res.text();
                         console.error("API Error Response:", errorText);
-                        throw new Error(`Analysis failed: ${res.status} ${res.statusText} - ${errorText}`);
+                        throw new Error(`Analysis failed: ${res.status} ${res.statusText}`);
                     }
                     return res.json();
                 })
-                .then((data) => {
+                .then(async (data) => {
                     console.log("API Response Data:", data);
 
-                    // Check if face was not detected
                     if (data.error === "face_not_detected") {
                         throw new Error("FACE_NOT_DETECTED");
                     }
+
+                    // ===== SALVAR NO CACHE =====
+                    await saveToCache(faceImage, data);
+
+                    // ===== INCREMENTAR USO =====
+                    incrementUsage();
 
                     localStorage.setItem("analysisResult", JSON.stringify(data));
                     return data;
@@ -131,7 +181,7 @@ export default function AnalyzingPage() {
                 console.error(error);
 
                 if (error.message === "FACE_NOT_DETECTED") {
-                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto (não use fotos de animais, objetos ou memes).");
+                    alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto.");
                 } else {
                     alert("Erro na análise. Verifique sua conexão ou tente outra foto.");
                 }
@@ -143,9 +193,57 @@ export default function AnalyzingPage() {
         };
 
         analyzeImages();
-    }, [router]);
+    }, [router, isLoaded, checkCache, saveToCache, canUseApi, incrementUsage]);
 
-    const CurrentIcon = STEPS[currentStep]?.icon || CheckCircle2;
+    const activeSteps = isFromCache ? CACHE_STEPS : STEPS;
+    const CurrentIcon = activeSteps[currentStep]?.icon || CheckCircle2;
+
+    // ===== TELA DE LIMITE ATINGIDO =====
+    if (limitReached) {
+        return (
+            <main className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
+                <Navbar />
+
+                <div className="flex-1 flex flex-col items-center justify-center px-4 relative z-10">
+                    <div className="w-full max-w-md space-y-8 text-center">
+
+                        {/* Lock Icon */}
+                        <div className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-yellow-500/30 bg-yellow-500/10 flex items-center justify-center">
+                            <Lock className="w-16 h-16 text-yellow-500" />
+                        </div>
+
+                        <div className="space-y-4 bg-black/80 backdrop-blur-sm p-8 rounded-2xl border border-yellow-500/20">
+                            <h2 className="text-2xl font-bold text-yellow-400">
+                                Limite Gratuito Atingido!
+                            </h2>
+                            <p className="text-gray-400">
+                                Você já usou suas <strong className="text-white">5 análises grátis</strong>.
+                                Torne-se <span className="text-yellow-400 font-bold">VIP</span> para análises ilimitadas!
+                            </p>
+
+                            <div className="space-y-3 pt-4">
+                                <Link href="/vip-scanner">
+                                    <Button
+                                        size="lg"
+                                        className="w-full h-14 text-lg font-bold bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black shadow-[0_0_30px_rgba(234,179,8,0.3)]"
+                                    >
+                                        <Crown className="w-5 h-5 mr-2" />
+                                        DESBLOQUEAR VIP
+                                    </Button>
+                                </Link>
+
+                                <Link href="/">
+                                    <Button variant="outline" className="w-full border-white/10 text-gray-400">
+                                        Voltar ao Início
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="min-h-screen bg-black text-white flex flex-col relative overflow-hidden">
@@ -157,9 +255,15 @@ export default function AnalyzingPage() {
             <div className="flex-1 flex flex-col items-center justify-center px-4 relative z-10">
                 <div className="w-full max-w-md space-y-8 text-center">
 
+                    {/* Cache indicator */}
+                    {isFromCache && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono animate-pulse">
+                            ⚡ Carregando do cache
+                        </div>
+                    )}
+
                     {/* Biometric Scanner Overlay */}
                     <div className="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-primary/30 shadow-[0_0_50px_rgba(57,255,20,0.2)]">
-                        {/* User Image */}
                         {userImage && (
                             <img
                                 src={userImage}
@@ -188,14 +292,14 @@ export default function AnalyzingPage() {
                         <div className="flex items-center justify-center gap-3">
                             <CurrentIcon className="w-6 h-6 text-primary animate-pulse" />
                             <h2 className="text-xl font-bold font-mono text-primary">
-                                {STEPS[currentStep]?.label || "Processando..."}
+                                {activeSteps[currentStep]?.label || "Processando..."}
                             </h2>
                         </div>
 
                         <ProgressBar progress={progress} />
 
                         <div className="space-y-2 text-left">
-                            {STEPS.map((step, i) => (
+                            {activeSteps.map((step, i) => (
                                 <div
                                     key={i}
                                     className={`flex items-center gap-3 text-xs md:text-sm transition-colors duration-500 ${i < currentStep ? "text-primary" :
