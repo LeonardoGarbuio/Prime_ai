@@ -20,7 +20,7 @@ export async function sendEmail({ email, nome, subject, htmlContent }: WelcomeEm
     const payload = {
         sender: {
             name: "Prime AI",
-            email: "nao-responda@prime-ai.app" // Pode usar qualquer domínio, Brevo autentica pela chave
+            email: "leonardogarbuiocavalheiro@gmail.com" // Brevo exige remetente verificado
         },
         to: [
             {
