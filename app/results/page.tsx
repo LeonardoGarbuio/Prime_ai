@@ -176,8 +176,8 @@ export default function ResultsPage() {
     // Data extraction - use AI values from the analysis
     console.log("📊 Result data:", result);
 
-    const currentScore = parseFloat(String(result.analise_geral?.nota_final || (5.5 + Math.random() * 3).toFixed(1)));
-    const potentialScore = Math.min(10.0, parseFloat(String(result.analise_geral?.nota_potencial || (currentScore + 0.5 + Math.random() * 2).toFixed(1))));
+    const currentScore = parseFloat(String(result.analise_geral?.nota_final || "7.5"));
+    const potentialScore = Math.min(10.0, parseFloat(String(result.analise_geral?.nota_potencial || (currentScore + 1.0).toFixed(1))));
     const gap = (potentialScore - currentScore).toFixed(1);
 
     // Real data from AI analysis

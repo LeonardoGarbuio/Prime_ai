@@ -438,7 +438,7 @@ export async function POST(req: Request) {
             };
 
             // Usa métricas reais do MediaPipe
-            const beautyScore = metrics?.beauty_score || (7.0 + Math.random() * 2).toFixed(1);
+            const beautyScore = metrics?.beauty_score || "7.5"; // Valor fixo para consistência
             const propAlturaLargura = metrics?.prop_altura_largura || 1.3;
             const propSimetria = metrics?.prop_mandibula_zigomas || 0.85;
             const simetriaScore = Math.min(95, Math.max(50, Math.round((propSimetria * 100))));
@@ -467,7 +467,7 @@ export async function POST(req: Request) {
                 },
                 grafico_radar: {
                     simetria: simetriaScore,
-                    pele: 70 + Math.floor(Math.random() * 20),
+                    pele: Math.min(95, Math.max(60, Math.round(simetriaScore * 0.85))), // Derivado da simetria para consistência
                     estrutura_ossea: estruturaScore,
                     terco_medio: Math.round(simetriaScore * 0.9),
                     proporcao_aurea: Math.round((parseFloat(String(beautyScore)) / 10) * 100)
@@ -578,9 +578,15 @@ export async function POST(req: Request) {
                 };
             }
 
-            // Nota: NÃO sobrescrevemos nota_final da IA
-            // A IA deve dar sua própria nota baseada na análise visual completa
-            // O beauty_score do MediaPipe é apenas para referência interna
+            // FORÇA o uso do beauty_score do MediaPipe para CONSISTÊNCIA
+            // Isso garante que a mesma foto SEMPRE dê o mesmo resultado
+            if (metrics.beauty_score && aiResult.analise_geral) {
+                aiResult.analise_geral.nota_final = parseFloat(metrics.beauty_score);
+                // Nota potencial: +1.0 até +1.5 baseado no score atual (determinístico)
+                const currentScore = parseFloat(metrics.beauty_score);
+                const potentialBonus = currentScore >= 8.5 ? 0.8 : currentScore >= 7.5 ? 1.2 : 1.5;
+                aiResult.analise_geral.nota_potencial = Math.min(9.9, parseFloat((currentScore + potentialBonus).toFixed(1)));
+            }
         }
 
         return NextResponse.json(aiResult);
