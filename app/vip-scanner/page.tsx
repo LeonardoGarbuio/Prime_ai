@@ -38,7 +38,10 @@ const formatFaceShape = (shape: string) => {
 
 export default function VipScannerPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [emailInput, setEmailInput] = useState("");
     const [passwordInput, setPasswordInput] = useState("");
+    const [loginLoading, setLoginLoading] = useState(false);
+    const [loginError, setLoginError] = useState("");
 
     const [faceImage, setFaceImage] = useState<string | null>(null);
     const [context, setContext] = useState('');
@@ -65,14 +68,47 @@ export default function VipScannerPage() {
                 console.error("Failed to load saved analysis:", e);
             }
         }
+
+        // Check if already logged in
+        const savedAuth = localStorage.getItem("vip_auth");
+        if (savedAuth) {
+            setIsAuthenticated(true);
+        }
     }, []);
 
-    const handleLogin = () => {
-        const validPassword = process.env.NEXT_PUBLIC_VIP_PASSWORD || "PRIME2025";
-        if (passwordInput.trim() === validPassword) {
-            setIsAuthenticated(true);
-        } else {
-            alert("Senha incorreta. Verifique na sua área de membros.");
+    const handleLogin = async () => {
+        if (!emailInput.trim() && !passwordInput.trim()) {
+            setLoginError("Digite seu email ou senha");
+            return;
+        }
+
+        setLoginLoading(true);
+        setLoginError("");
+
+        try {
+            const response = await fetch("/api/auth/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: emailInput.trim().toLowerCase(),
+                    senha: passwordInput.trim()
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.ativo) {
+                setIsAuthenticated(true);
+                localStorage.setItem("vip_auth", emailInput || "admin");
+                console.log("✅ Login VIP bem-sucedido:", data.message);
+            } else {
+                setLoginError(data.message || "Acesso não autorizado. Verifique sua assinatura.");
+            }
+        } catch (error: any) {
+            console.error("Erro no login:", error);
+            setLoginError("Erro de conexão. Tente novamente.");
+        } finally {
+            setLoginLoading(false);
         }
     };
 
@@ -260,24 +296,42 @@ export default function VipScannerPage() {
                             <div>
                                 <h2 className="text-xl font-bold text-white">Área de Membros</h2>
                                 <p className="text-gray-500 text-xs mt-2 leading-relaxed">
-                                    Já comprou? Digite a senha enviada para o seu e-mail ou disponível na plataforma.
+                                    Digite o email usado na compra. Ou use a senha VIP.
                                 </p>
                             </div>
 
+                            {loginError && (
+                                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-red-400 text-xs">
+                                    {loginError}
+                                </div>
+                            )}
+
                             <div className="space-y-4">
                                 <div className="space-y-2 text-left">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">Senha de Acesso</label>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">Email de Compra</label>
                                     <input
-                                        type="text"
-                                        placeholder="DIGITE A SENHA"
+                                        type="email"
+                                        placeholder="seu@email.com"
+                                        value={emailInput}
+                                        onChange={(e) => setEmailInput(e.target.value)}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 focus:outline-none text-center text-sm transition-all"
+                                    />
+                                </div>
+                                <div className="space-y-2 text-left">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1">Ou Senha VIP</label>
+                                    <input
+                                        type="password"
+                                        placeholder="SENHA VIP"
                                         value={passwordInput}
                                         onChange={(e) => setPasswordInput(e.target.value)}
-                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-700 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 focus:outline-none text-center text-sm tracking-widest uppercase font-mono transition-all"
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-4 text-white placeholder-gray-600 focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 focus:outline-none text-center text-sm tracking-widest uppercase font-mono transition-all"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                                     />
                                 </div>
                                 <button
                                     onClick={handleLogin}
-                                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center gap-2 group"
+                                    disabled={loginLoading}
+                                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center gap-2 group disabled:opacity-50"
                                 >
                                     ACESSAR
                                     <ArrowUp className="w-4 h-4 rotate-90 group-hover:translate-x-1 transition-transform" />

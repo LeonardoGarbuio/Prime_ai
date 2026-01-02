@@ -11,6 +11,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
+    "@supabase/supabase-js": "^2.89.0",
     "@vercel/analytics": "^1.5.0",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
