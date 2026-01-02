@@ -25,7 +25,10 @@ import {
     AlertTriangle,
     Info,
     Trophy,
-    History
+    History,
+    Share2,
+    Download,
+    MessageCircle
 } from "lucide-react";
 import {
     Radar,
@@ -75,38 +78,50 @@ export default function ResultsPage() {
 
         setIsSaving(true);
         try {
+            // Captura simples sem opções complexas
             const canvas = await html2canvas(shareCardRef.current, {
                 backgroundColor: '#000000',
-                scale: 2, // Higher quality
+                scale: 1.5,
+                logging: false,
                 useCORS: true,
-                allowTaint: true,
             });
 
-            // Convert to blob
-            canvas.toBlob(async (blob) => {
-                if (!blob) return;
+            // Download direto
+            const link = document.createElement('a');
+            link.download = `prime-ai-resultado-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
-                // Try native share/save on mobile
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'prime-ai-result.png', { type: 'image/png' })] })) {
-                    try {
-                        await navigator.share({
-                            files: [new File([blob], 'prime-ai-result.png', { type: 'image/png' })],
-                            title: 'Meu Resultado Prime AI',
-                        });
-                    } catch (e) {
-                        // User cancelled or share failed, fall back to download
-                        downloadImage(canvas);
-                    }
-                } else {
-                    // Fallback: download the image
-                    downloadImage(canvas);
-                }
-            }, 'image/png', 1.0);
         } catch (e) {
             console.error('Error saving image:', e);
-            alert('Erro ao salvar imagem. Tire um print manual.');
+            // Tentar método alternativo - copiar canvas para clipboard em vez de download
+            try {
+                const canvas = await html2canvas(shareCardRef.current!, {
+                    backgroundColor: '#000000',
+                    scale: 1,
+                    logging: false,
+                });
+
+                canvas.toBlob(async (blob) => {
+                    if (blob && navigator.clipboard && window.ClipboardItem) {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        alert('✅ Imagem copiada! Cole em qualquer app.');
+                    } else {
+                        // Último fallback: abre em nova aba
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const newTab = window.open();
+                        if (newTab) {
+                            newTab.document.write(`<img src="${dataUrl}" style="max-width:100%"/><p>Segure na imagem para salvar</p>`);
+                        }
+                    }
+                });
+            } catch (e2) {
+                alert('Use o print do celular (botões de poder + volume).');
+            }
         } finally {
-            setIsSaving(false);
+            setTimeout(() => setIsSaving(false), 1000);
         }
     };
 
@@ -144,10 +159,41 @@ export default function ResultsPage() {
     }, [result, hasSaved, checkAndUnlockBadges, badges]);
 
     // Link único do produto Prime AI VIP
-    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/7tVLmhI";
+    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/7lYLmhI";
 
     const handleCheckout = () => {
         window.location.href = VIP_CHECKOUT_LINK;
+    };
+
+    // Compartilhar no WhatsApp
+    const handleShareWhatsApp = () => {
+        const score = result?.analise_geral?.nota_final || "7.5";
+        const text = `Fiz uma análise facial com IA e tirei *${score}/10*! Testa a sua: primeai-amber.vercel.app`;
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+    // Compartilhar genérico (Instagram/outros)
+    const handleShare = async () => {
+        const score = result?.analise_geral?.nota_final || "7.5";
+        const faceShape = formatFaceShape(result?.rosto?.formato_rosto || "Oval");
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Minha Análise Prime AI',
+                    text: `🔥 Minha nota: ${score}/10 | Formato: ${faceShape}`,
+                    url: 'https://primeai-amber.vercel.app',
+                });
+            } catch (err) {
+                console.log('Erro ao compartilhar:', err);
+            }
+        } else {
+            // Fallback: copiar para clipboard
+            const text = `🔥 Minha nota Prime AI: ${score}/10 | Formato: ${faceShape}\n\nDescubra a sua: https://primeai-amber.vercel.app`;
+            navigator.clipboard.writeText(text);
+            alert('Link copiado para compartilhar!');
+        }
     };
 
     if (!result) {
@@ -269,21 +315,40 @@ export default function ResultsPage() {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="absolute -bottom-10 left-0 right-0 text-center">
-                            <p className={`text-sm flex items-center justify-center gap-2 ${isSaving ? 'text-primary' : 'text-gray-400 animate-bounce'}`}>
-                                {isSaving ? (
-                                    <>Salvando imagem...</>
-                                ) : (
-                                    <><ArrowUp className="w-4 h-4" /> Toque para salvar imagem</>
-                                )}
-                            </p>
-                        </div>
                     </div>
                 </section>
 
+                {/* Texto de feedback - FORA do card */}
+                <div className="text-center mb-2 -mt-4">
+                    <p className={`text-sm flex items-center justify-center gap-2 ${isSaving ? 'text-primary' : 'text-gray-400'}`}>
+                        {isSaving ? (
+                            <>Salvando imagem...</>
+                        ) : (
+                            <><ArrowUp className="w-4 h-4" /> Toque no card para salvar imagem</>
+                        )}
+                    </p>
+                </div>
+
+                {/* === SHARE SECTION === */}
+                <section className="flex justify-center gap-3 mb-8">
+                    <button
+                        onClick={handleShareWhatsApp}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/30 rounded-full text-[#25D366] text-sm font-medium transition-all"
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                    </button>
+                    <button
+                        onClick={handleShare}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white text-sm font-medium transition-all"
+                    >
+                        <Share2 className="w-4 h-4" />
+                        Compartilhar
+                    </button>
+                </section>
+
                 {/* === 2. QUICK STATS - 4 Cards Grid === */}
-                <section className="grid grid-cols-2 gap-4 mb-8 mt-16">
+                <section className="grid grid-cols-2 gap-4 mb-8">
                     {/* Simetria */}
                     <div className="bg-[#1C1C1E] rounded-2xl p-4 border border-white/5">
                         <div className="flex items-center justify-between mb-3">

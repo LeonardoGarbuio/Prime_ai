@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { UploadZone } from '@/components/ui/UploadZone';
 import { Button } from '@/components/ui/Button';
 import { Navbar } from "@/components/layout/Navbar";
@@ -8,7 +9,8 @@ import { Footer } from "@/components/layout/Footer";
 import {
     Lock, Crown, Sparkles, AlertTriangle, CheckCircle2, Zap,
     ScanFace, User, ArrowUp, ArrowDown, Star, XCircle,
-    Palette, Shirt, ShoppingBag, Ban, Glasses, ChevronDown
+    Palette, Shirt, ShoppingBag, Ban, Glasses, ChevronDown, Download,
+    Share2, MessageCircle
 } from 'lucide-react';
 import {
     Radar,
@@ -19,6 +21,7 @@ import {
     ResponsiveContainer
 } from 'recharts';
 import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
+import { generateVIPReport } from "@/utils/generatePDF";
 
 // Format face shape for display (fix Portuguese characters)
 const formatFaceShape = (shape: string) => {
@@ -42,6 +45,13 @@ export default function VipScannerPage() {
     const [passwordInput, setPasswordInput] = useState("");
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+
+    // Estados para recuperação de acesso
+    const [showRecovery, setShowRecovery] = useState(false);
+    const [recoveryEmail, setRecoveryEmail] = useState("");
+    const [recoveryLoading, setRecoveryLoading] = useState(false);
+    const [recoveryMessage, setRecoveryMessage] = useState("");
 
     const [faceImage, setFaceImage] = useState<string | null>(null);
     const [context, setContext] = useState('');
@@ -49,6 +59,10 @@ export default function VipScannerPage() {
     const [result, setResult] = useState<any>(null);
     const [previousResult, setPreviousResult] = useState<any>(null);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Ref para captura de tela do card
+    const shareCardRef = useRef<HTMLDivElement>(null);
 
     // Initialize MediaPipe and Load Existing Data on mount
     useEffect(() => {
@@ -69,10 +83,34 @@ export default function VipScannerPage() {
             }
         }
 
-        // Check if already logged in
+        // Check if already logged in (localStorage ou cookie)
         const savedAuth = localStorage.getItem("vip_auth");
         if (savedAuth) {
             setIsAuthenticated(true);
+        }
+
+        // Verificar cookie de sessão (magic link)
+        const cookies = document.cookie.split(';');
+        const vipEmailCookie = cookies.find(c => c.trim().startsWith('vip_email='));
+        if (vipEmailCookie) {
+            const email = vipEmailCookie.split('=')[1]?.trim();
+            if (email) {
+                setIsAuthenticated(true);
+                localStorage.setItem("vip_auth", email);
+            }
+        }
+
+        // Verificar parâmetros de URL (auth=success ou error)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auth') === 'success') {
+            setSuccessMessage('✅ Acesso liberado!');
+            // Limpar URL
+            window.history.replaceState({}, '', '/vip-scanner');
+        }
+        const errorParam = params.get('error');
+        if (errorParam) {
+            setLoginError(errorParam);
+            window.history.replaceState({}, '', '/vip-scanner');
         }
     }, []);
 
@@ -109,6 +147,41 @@ export default function VipScannerPage() {
             setLoginError("Erro de conexão. Tente novamente.");
         } finally {
             setLoginLoading(false);
+        }
+    };
+
+    // Handler para recuperação de acesso
+    const handleRecovery = async () => {
+        if (!recoveryEmail.trim()) {
+            setRecoveryMessage("Digite seu email");
+            return;
+        }
+
+        setRecoveryLoading(true);
+        setRecoveryMessage("");
+
+        try {
+            const response = await fetch("/api/auth/recover", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: recoveryEmail.trim().toLowerCase() }),
+            });
+
+            const data = await response.json();
+            setRecoveryMessage(data.message || "Verifique seu email!");
+
+            if (data.success) {
+                // Fecha modal após 3 segundos
+                setTimeout(() => {
+                    setShowRecovery(false);
+                    setRecoveryEmail("");
+                    setRecoveryMessage("");
+                }, 3000);
+            }
+        } catch (error) {
+            setRecoveryMessage("Erro de conexão. Tente novamente.");
+        } finally {
+            setRecoveryLoading(false);
         }
     };
 
@@ -170,38 +243,30 @@ export default function VipScannerPage() {
             }
 
             const data = await response.json();
-            console.log("VIP Analysis Data (New):", data);
+            console.log("VIP Analysis Data:", data);
 
-            // MERGE TOTAL: Se existe análise anterior (normal), usa TODOS os dados base dela
-            // Isso garante 100% de consistência entre VIP e Normal
-            const hasExistingAnalysis = previousResult?.analise_geral?.nota_final;
+            // VIP faz análise INDEPENDENTE - não puxa dados do normal
+            // Apenas mantém consistência do SCORE se for a mesma foto (baseado no beauty_score do MediaPipe)
 
-            let mergedResult;
+            // Checar se é a mesma imagem comparando o faceImage
+            const savedImage = localStorage.getItem("faceImage");
+            const isSameImage = savedImage === faceImage;
 
-            if (hasExistingAnalysis) {
-                console.log("🔄 Usando dados BASE da análise anterior para consistência");
-                mergedResult = {
-                    // Dados de ESTILO vêm da nova análise VIP
-                    analise_cromatica: data.analise_cromatica,
-                    guia_vestuario: data.guia_vestuario,
-                    feedback_rapido: data.feedback_rapido,
-                    sugestao_imediata: data.sugestao_imediata,
-                    adaptacao_trend: data.adaptacao_trend,
-                    plano_harmonizacao: data.plano_harmonizacao || previousResult?.plano_harmonizacao,
+            let finalResult = data;
 
-                    // Dados BASE vêm da análise ANTERIOR (normal) - 100% consistentes
-                    analise_geral: previousResult.analise_geral,
-                    rosto: previousResult.rosto,
-                    grafico_radar: previousResult.grafico_radar,
-                    corpo_postura: previousResult.corpo_postura || data.corpo_postura,
-                };
+            // Se for a mesma imagem, usar o mesmo beauty_score para consistência
+            if (isSameImage && previousResult?.analise_geral?.nota_final) {
+                console.log("🔄 Mesma foto detectada - mantendo score consistente");
+                if (finalResult.analise_geral) {
+                    finalResult.analise_geral.nota_final = previousResult.analise_geral.nota_final;
+                    finalResult.analise_geral.nota_potencial = previousResult.analise_geral.nota_potencial;
+                }
             } else {
-                console.log("⚡ Primeira análise - usando dados da API diretamente");
-                mergedResult = data;
+                console.log("⚡ Nova foto ou primeira análise - usando dados VIP completos");
             }
 
-            console.log("✨ Merged VIP Result:", mergedResult);
-            setResult(mergedResult);
+            console.log("✨ VIP Result:", finalResult);
+            setResult(finalResult);
         } catch (error) {
             console.error(error);
             alert('Erro na análise. Tente novamente.');
@@ -222,6 +287,86 @@ export default function VipScannerPage() {
     const currentScore = parseFloat(String(result?.analise_geral?.nota_final || "7.5"));
     const potentialScore = Math.min(10.0, parseFloat(String(result?.analise_geral?.nota_potencial || (currentScore + 1.0).toFixed(1))));
     const gap = (potentialScore - currentScore).toFixed(1);
+
+    // Compartilhar no WhatsApp
+    const handleShareWhatsApp = () => {
+        const score = result?.analise_geral?.nota_final || "7.5";
+        const text = `Fiz uma análise facial com IA e tirei *${score}/10*! Testa a sua: primeai-amber.vercel.app`;
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+    // Compartilhar genérico
+    const handleShare = async () => {
+        const score = result?.analise_geral?.nota_final || "7.5";
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Minha Análise Prime AI VIP',
+                    text: `Minha nota: ${score}/10`,
+                    url: 'https://primeai-amber.vercel.app',
+                });
+            } catch (err) {
+                console.log('Erro ao compartilhar:', err);
+            }
+        } else {
+            const text = `Minha nota Prime AI: ${score}/10\n\nDescubra a sua: https://primeai-amber.vercel.app`;
+            navigator.clipboard.writeText(text);
+            alert('Link copiado para compartilhar!');
+        }
+    };
+
+    // Função para salvar imagem do card ao clicar
+    const saveShareCard = async () => {
+        if (!shareCardRef.current || isSaving) return;
+
+        setIsSaving(true);
+        try {
+            const canvas = await html2canvas(shareCardRef.current, {
+                backgroundColor: '#000000',
+                scale: 1.5,
+                logging: false,
+                useCORS: true,
+            });
+
+            // Download direto
+            const link = document.createElement('a');
+            link.download = `PrimeAI_VIP_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (error) {
+            console.error('Erro ao salvar imagem:', error);
+            // Fallback: tentar copiar para clipboard ou abrir em nova aba
+            try {
+                const canvas = await html2canvas(shareCardRef.current!, {
+                    backgroundColor: '#000000',
+                    scale: 1,
+                    logging: false,
+                });
+
+                canvas.toBlob(async (blob) => {
+                    if (blob && navigator.clipboard && window.ClipboardItem) {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        alert('✅ Imagem copiada! Cole em qualquer app.');
+                    } else {
+                        const dataUrl = canvas.toDataURL('image/png');
+                        const newTab = window.open();
+                        if (newTab) {
+                            newTab.document.write(`<img src="${dataUrl}" style="max-width:100%"/><p>Segure na imagem para salvar</p>`);
+                        }
+                    }
+                });
+            } catch (e2) {
+                alert('Use o print do celular (botões de poder + volume).');
+            }
+        } finally {
+            setTimeout(() => setIsSaving(false), 1000);
+        }
+    };
 
     if (!isAuthenticated) {
         return (
@@ -273,7 +418,7 @@ export default function VipScannerPage() {
                             </div>
                             <Button
                                 className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-7 text-lg shadow-[0_0_30px_rgba(234,179,8,0.2)] hover:shadow-[0_0_40px_rgba(234,179,8,0.4)] transition-all transform hover:-translate-y-1"
-                                onClick={() => window.open('https://pay.kiwify.com.br/7tVLmhI', '_blank')}
+                                onClick={() => window.open('https://pay.kiwify.com.br/7lYLmhI', '_blank')}
                             >
                                 QUERO ACESSO VIP
                             </Button>
@@ -336,8 +481,67 @@ export default function VipScannerPage() {
                                     ACESSAR
                                     <ArrowUp className="w-4 h-4 rotate-90 group-hover:translate-x-1 transition-transform" />
                                 </button>
+
+                                {/* Link Esqueci meu acesso */}
+                                <button
+                                    onClick={() => setShowRecovery(true)}
+                                    className="w-full text-center text-xs text-gray-500 hover:text-yellow-400 transition-colors py-2"
+                                >
+                                    Esqueci meu acesso →
+                                </button>
                             </div>
+
+                            {/* Mensagem de sucesso */}
+                            {successMessage && (
+                                <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-green-400 text-xs text-center">
+                                    {successMessage}
+                                </div>
+                            )}
                         </div>
+
+                        {/* Modal de Recuperação */}
+                        {showRecovery && (
+                            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 w-full max-w-xs space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-white font-bold">Recuperar Acesso</h3>
+                                        <button
+                                            onClick={() => { setShowRecovery(false); setRecoveryMessage(""); }}
+                                            className="text-gray-500 hover:text-white"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <p className="text-gray-400 text-xs">
+                                        Digite o email usado na compra. Enviaremos um link de acesso.
+                                    </p>
+
+                                    <input
+                                        type="email"
+                                        placeholder="seu@email.com"
+                                        value={recoveryEmail}
+                                        onChange={(e) => setRecoveryEmail(e.target.value)}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl p-3 text-white placeholder-gray-600 focus:ring-2 focus:ring-yellow-500/50 focus:outline-none text-center text-sm"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleRecovery()}
+                                    />
+
+                                    {recoveryMessage && (
+                                        <p className={`text-xs text-center ${recoveryMessage.includes('sucesso') || recoveryMessage.includes('receberá') ? 'text-green-400' : 'text-yellow-400'}`}>
+                                            {recoveryMessage}
+                                        </p>
+                                    )}
+
+                                    <button
+                                        onClick={handleRecovery}
+                                        disabled={recoveryLoading}
+                                        className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-600 text-black text-sm font-bold rounded-xl disabled:opacity-50"
+                                    >
+                                        {recoveryLoading ? 'Enviando...' : 'ENVIAR LINK'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Decorative elements */}
                         <div className="absolute bottom-0 right-0 w-64 h-64 bg-yellow-500/5 blur-[80px] rounded-full pointer-events-none" />
@@ -490,7 +694,7 @@ export default function VipScannerPage() {
 
                         {/* === 1. SEU ARQUÉTIPO - EGO/WOW EFFECT (First Thing User Sees) === */}
                         <section className="space-y-6 mb-8">
-                            <div className="relative max-w-sm mx-auto group">
+                            <div ref={shareCardRef} className="relative max-w-sm mx-auto group cursor-pointer" onClick={saveShareCard}>
                                 <div className="relative overflow-hidden rounded-3xl bg-black border border-white/10 shadow-[0_0_40px_rgba(234,179,8,0.15)] aspect-[9/16]">
                                     {faceImage && (
                                         <div className="absolute inset-0 z-0">
@@ -544,6 +748,35 @@ export default function VipScannerPage() {
                                     </div>
                                 </div>
                             </div>
+                        </section>
+
+                        {/* Texto de feedback - FORA do card */}
+                        <div className="text-center mb-4 -mt-2">
+                            <p className={`text-sm flex items-center justify-center gap-2 ${isSaving ? 'text-yellow-400' : 'text-gray-400'}`}>
+                                {isSaving ? (
+                                    <>Salvando imagem...</>
+                                ) : (
+                                    <><ArrowUp className="w-4 h-4" /> Toque no card para salvar imagem</>
+                                )}
+                            </p>
+                        </div>
+
+                        {/* === SHARE SECTION === */}
+                        <section className="flex justify-center gap-3 mb-8">
+                            <button
+                                onClick={handleShareWhatsApp}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-[#25D366]/20 hover:bg-[#25D366]/30 border border-[#25D366]/30 rounded-full text-[#25D366] text-sm font-medium transition-all"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                                WhatsApp
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white text-sm font-medium transition-all"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                Compartilhar
+                            </button>
                         </section>
 
                         {/* === 2. QUICK STATS - 4 Cards Grid === */}

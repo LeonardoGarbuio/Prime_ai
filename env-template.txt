@@ -1,0 +1,30 @@
+# ============================================
+# PRIME AI - VARIÁVEIS DE AMBIENTE (SEGURO)
+# ============================================
+# Copie este arquivo para .env.local e preencha os valores
+
+# ==================== SUPABASE ====================
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_SERVICE_KEY=sua-service-key-aqui
+
+# ==================== KIWIFY WEBHOOK ====================
+# IMPORTANTE: Copie o Token que aparece no painel do Kiwify
+# Kiwify > Webhooks > Editar > Token
+KIWIFY_WEBHOOK_TOKEN=cm8igjr0xyk
+
+# ==================== AUTENTICAÇÃO ====================
+# Senha VIP para acesso legado (NÃO use NEXT_PUBLIC_ para não expor no frontend)
+VIP_PASSWORD=senha-forte-para-vip
+
+# Senha master para admins
+ADMIN_MASTER_PASSWORD=senha-muito-forte-para-admin
+
+# Lista de emails que podem usar a senha admin (separados por vírgula)
+ALLOWED_ADMIN_EMAILS=admin@seudominio.com,dev@seudominio.com
+
+# ==================== EMAIL (RESEND) ====================
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxx
+
+# ==================== OPCIONAL ====================
+# GROQ_API_KEY=gsk_xxxxxxxxxxxxxxx
+# GEMINI_API_KEY=AIxxxxxxxxxxxxxxx
