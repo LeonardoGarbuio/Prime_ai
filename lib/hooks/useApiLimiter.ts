@@ -17,7 +17,7 @@ interface CacheStore {
 const USAGE_COUNT_KEY = 'prime_ai_usage_count';
 const PRO_STATUS_KEY = 'prime_ai_pro_status';
 const CACHE_KEY = 'prime_ai_cache';
-const MAX_FREE_USES = 5;
+const MAX_FREE_USES = 999; // LIBERADO PARA TESTES
 const CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
 
 // ====== HASH FUNCTION ======
