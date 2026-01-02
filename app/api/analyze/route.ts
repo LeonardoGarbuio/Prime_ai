@@ -528,8 +528,79 @@ export async function POST(req: Request) {
         }
 
         if (!jsonMatch) {
-            console.error("IA respondeu texto sem JSON:", rawText.substring(0, 500));
-            throw new Error("Formato inválido na resposta da IA");
+            // FALLBACK: Usa métricas locais quando IA não retorna JSON válido
+            console.warn("⚠️ IA respondeu sem JSON válido. Usando FALLBACK LOCAL...");
+            console.warn("Raw text (primeiros 300 chars):", rawText.substring(0, 300));
+
+            const shape = metrics?.formato_rosto || "Oval";
+            const archetypeMap: any = {
+                "Quadrado": "THE RULER", "QUADRADO": "THE RULER",
+                "Diamante": "THE HUNTER", "DIAMANTE": "THE HUNTER",
+                "Oval": "THE NOBLE", "OVAL": "THE NOBLE",
+                "Triângulo": "THE CREATOR", "TRIANGULAR": "THE CREATOR",
+                "Coração": "THE CHARMER", "CORACAO": "THE CHARMER",
+                "Redondo": "THE MYSTIC", "REDONDO": "THE MYSTIC",
+                "RETANGULAR": "THE COMMANDER"
+            };
+
+            const beautyScore = metrics?.beauty_score || "7.5";
+            const propSimetria = metrics?.prop_mandibula_zigomas || 0.85;
+            const propAlturaLargura = metrics?.prop_altura_largura || 1.3;
+            const simetriaScore = Math.min(95, Math.max(50, Math.round((propSimetria * 100))));
+            const estruturaScore = Math.min(95, Math.max(50, Math.round((propAlturaLargura - 1) * 100 + 60)));
+
+            return NextResponse.json({
+                analise_geral: {
+                    nota_final: parseFloat(String(beautyScore)),
+                    nota_potencial: Math.min(9.9, parseFloat(String(beautyScore)) + 1.2),
+                    idade_real_estimada: 25,
+                    potencial_genetico: parseFloat(String(beautyScore)) >= 8.5 ? "Elite" : parseFloat(String(beautyScore)) >= 7.5 ? "Alto" : "Médio",
+                    arquetipo: archetypeMap[shape] || archetypeMap[shape.toUpperCase()] || "THE MAVERICK",
+                    resumo_brutal: `Análise geométrica detectou formato ${shape}. Score de beleza: ${beautyScore}.`
+                },
+                rosto: {
+                    formato_rosto: shape,
+                    pontos_fortes: [`Formato ${shape} bem definido`, "Estrutura facial equilibrada"],
+                    pontos_de_atencao: ["Para análise detalhada, tente novamente"],
+                    analise_pele: "Análise básica disponível."
+                },
+                grafico_radar: {
+                    simetria: simetriaScore,
+                    pele: Math.round(simetriaScore * 0.85),
+                    estrutura_ossea: estruturaScore,
+                    terco_medio: Math.round(simetriaScore * 0.9),
+                    proporcao_aurea: Math.round((parseFloat(String(beautyScore)) / 10) * 100)
+                },
+                corpo_postura: { analise: "Apenas rosto visível.", gordura_estimada: "Média" },
+                plano_harmonizacao: {
+                    passo_1_imediato: "Iluminação adequada para fotos",
+                    passo_2_rotina: "Skincare básico diário",
+                    passo_3_longo_prazo: "Consultoria de visagismo profissional"
+                },
+                feedback_rapido: {
+                    nota_do_look: parseFloat(String(beautyScore)),
+                    vibe_transmitida: "Confiante",
+                    o_que_funcionou: "Estrutura facial bem definida",
+                    o_que_matou_o_look: "Para análise detalhada, tente novamente"
+                },
+                analise_cromatica: {
+                    estacao: "Análise pendente",
+                    descricao: "Tente novamente para análise cromática completa",
+                    paleta_ideal: ["#2C3E50", "#34495E", "#1ABC9C", "#3498DB", "#9B59B6"]
+                },
+                guia_vestuario: {
+                    pecas_chave: ["Camisa bem ajustada", "Blazer estruturado"],
+                    evitar: ["Cores muito vibrantes sem análise cromática"],
+                    acessorios: "Óculos com armação que complemente seu formato de rosto"
+                },
+                sugestao_imediata: {
+                    corte_ideal: `Corte que valorize o formato ${shape}`,
+                    truque_de_5_minutos: "Postura ereta e contato visual",
+                    produto_chave: "Hidratante facial"
+                },
+                is_fallback: true,
+                ai_provider: "LOCAL_FALLBACK"
+            });
         }
 
         // 3. Limpa caracteres problemáticos
@@ -555,10 +626,38 @@ export async function POST(req: Request) {
                     aiResult = JSON.parse(truncatedJson);
                     console.log("✅ JSON recuperado após truncamento");
                 } catch {
-                    throw new Error(`JSON inválido: ${parseError.message}`);
+                    // Fallback local ao invés de erro
+                    console.warn("⚠️ JSON irrecuperável. Usando fallback local...");
+                    const shape = metrics?.formato_rosto || "Oval";
+                    const beautyScore = metrics?.beauty_score || "7.5";
+                    aiResult = {
+                        analise_geral: {
+                            nota_final: parseFloat(String(beautyScore)),
+                            nota_potencial: Math.min(9.9, parseFloat(String(beautyScore)) + 1.2),
+                            arquetipo: "THE MAVERICK",
+                            resumo_brutal: `Formato ${shape} detectado. Score: ${beautyScore}`
+                        },
+                        rosto: { formato_rosto: shape, pontos_fortes: [], pontos_de_atencao: [] },
+                        grafico_radar: { simetria: 75, pele: 70, estrutura_ossea: 70, terco_medio: 70, proporcao_aurea: 70 },
+                        is_fallback: true
+                    };
                 }
             } else {
-                throw new Error(`JSON inválido: ${parseError.message}`);
+                // Fallback local
+                console.warn("⚠️ Nenhum JSON encontrado. Usando fallback local...");
+                const shape = metrics?.formato_rosto || "Oval";
+                const beautyScore = metrics?.beauty_score || "7.5";
+                aiResult = {
+                    analise_geral: {
+                        nota_final: parseFloat(String(beautyScore)),
+                        nota_potencial: Math.min(9.9, parseFloat(String(beautyScore)) + 1.2),
+                        arquetipo: "THE MAVERICK",
+                        resumo_brutal: `Formato ${shape} detectado. Score: ${beautyScore}`
+                    },
+                    rosto: { formato_rosto: shape, pontos_fortes: [], pontos_de_atencao: [] },
+                    grafico_radar: { simetria: 75, pele: 70, estrutura_ossea: 70, terco_medio: 70, proporcao_aurea: 70 },
+                    is_fallback: true
+                };
             }
         }
 
