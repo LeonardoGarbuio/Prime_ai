@@ -31,20 +31,22 @@ export async function POST(req: Request) {
         let candidateModels: string[] = [];
 
         if (mode === "stylist") {
-            // Stylist: Prioriza modelos ESTÁVEIS (menos erros)
+            // Stylist: Foco em 2.0 Flash (Equilíbrio) e 2.0 Pro (Inteligência)
             candidateModels = [
-                "models/gemini-2.0-flash",         // Stable 2.0 - PRIORIDADE
-                "models/gemini-1.5-flash",         // Fallback muito estável
-                "models/gemini-1.5-pro",           // Mais inteligente e estável
+                "models/gemini-2.0-flash",         // Stable 2.0
+                "models/gemini-2.0-flash-exp",     // Experimental (criativo)
                 "models/gemini-2.0-flash-lite",    // Rápido e Eficiente
+                "models/gemini-flash-latest",      // Alias seguro
+                "models/gemini-2.0-pro-exp"        // Mais inteligente de todos
             ];
         } else {
-            // Forensic: Prioriza modelos ESTÁVEIS
+            // Forensic: Foco em 2.0 Pro e precisão
             candidateModels = [
-                "models/gemini-2.0-flash",         // Stable 2.0 - PRIORIDADE
-                "models/gemini-1.5-pro",           // Muito estável e inteligente
-                "models/gemini-1.5-flash",         // Fallback estável
+                "models/gemini-2.0-flash",         // Stable 2.0
+                "models/gemini-2.0-pro-exp",       // Melhor para raciocínio complexo
                 "models/gemini-2.0-flash-lite",    // Velocidade
+                "models/gemini-pro-latest",        // Alias seguro Pro
+                "models/gemini-2.0-flash-exp"
             ];
         }
 
