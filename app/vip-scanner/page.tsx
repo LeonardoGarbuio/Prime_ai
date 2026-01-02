@@ -611,18 +611,39 @@ export default function VipScannerPage() {
                                 </button>
                                 {expandedSection === 'positives' && (
                                     <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">Formato de rosto: {formatFaceShape(result?.rosto?.formato_rosto || 'Oval')}</span>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">Simetria facial de {result.grafico_radar?.simetria || 75}%</span>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">Alto potencial de melhoria (+{gap} pontos)</span>
-                                        </div>
+                                        {/* Pontos fortes da análise da IA */}
+                                        {result.rosto?.pontos_fortes?.length > 0 ? (
+                                            result.rosto.pontos_fortes.map((ponto: string, i: number) => (
+                                                <div key={i} className="flex items-start gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                                    <span className="text-gray-300 text-sm">{ponto}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            /* Fallback com dados específicos */
+                                            <>
+                                                <div className="flex items-start gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                                    <span className="text-gray-300 text-sm">Estrutura ósssea bem definida para formato {formatFaceShape(result?.rosto?.formato_rosto || 'Oval')}</span>
+                                                </div>
+                                                <div className="flex items-start gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                                    <span className="text-gray-300 text-sm">
+                                                        {(result.grafico_radar?.simetria || 75) >= 80
+                                                            ? `Excelente simetria facial (${result.grafico_radar?.simetria || 75}%) - acima da média`
+                                                            : `Boa simetria facial (${result.grafico_radar?.simetria || 75}%) - dentro da norma`}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-start gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                                    <span className="text-gray-300 text-sm">
+                                                        {parseFloat(gap) > 1
+                                                            ? `Alto potencial de evolução com visagismo (+${gap} pontos possíveis)`
+                                                            : `Já próximo do seu potencial máximo - foco em manutenção`}
+                                                    </span>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 )}
                             </div>
