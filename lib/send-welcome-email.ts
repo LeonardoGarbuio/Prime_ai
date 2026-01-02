@@ -3,13 +3,14 @@ interface WelcomeEmailParams {
     nome?: string;
     subject?: string;
     htmlContent?: string;
+    replyTo?: { email: string; name?: string };
 }
 
 /**
  * Envia email usando a API da Brevo (antiga Sendinblue)
  * Documentação: https://developers.brevo.com/docs/send-a-transactional-email
  */
-export async function sendEmail({ email, nome, subject, htmlContent }: WelcomeEmailParams): Promise<boolean> {
+export async function sendEmail({ email, nome, subject, htmlContent, replyTo }: WelcomeEmailParams): Promise<boolean> {
     const apiKey = process.env.BREVO_API_KEY;
 
     if (!apiKey) {
@@ -29,7 +30,8 @@ export async function sendEmail({ email, nome, subject, htmlContent }: WelcomeEm
             }
         ],
         subject: subject || "Bem-vindo ao Prime AI VIP!",
-        htmlContent: htmlContent || "<p>Bem-vindo!</p>"
+        htmlContent: htmlContent || "<p>Bem-vindo!</p>",
+        replyTo: replyTo || { email: "leonardogarbuiocavalheiro@gmail.com", name: "Suporte Prime AI" }
     };
 
     try {
@@ -123,6 +125,7 @@ export async function sendWelcomeEmail({ email, nome }: { email: string; nome?: 
         email,
         nome,
         subject: "🎉 Bem-vindo ao Prime AI VIP!",
-        htmlContent: html
+        htmlContent: html,
+        replyTo: { email: "leonardogarbuiocavalheiro@gmail.com", name: "Suporte Prime AI" }
     });
 }
