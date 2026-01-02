@@ -1,39 +1,69 @@
-import { Resend } from 'resend';
-
-// Lazy loading do cliente Resend para evitar erro no build
-let resendClient: Resend | null = null;
-
-function getResendClient(): Resend | null {
-    if (!process.env.RESEND_API_KEY) {
-        return null;
-    }
-    if (!resendClient) {
-        resendClient = new Resend(process.env.RESEND_API_KEY);
-    }
-    return resendClient;
-}
-
 interface WelcomeEmailParams {
     email: string;
     nome?: string;
+    subject?: string;
+    htmlContent?: string;
 }
 
-export async function sendWelcomeEmail({ email, nome }: WelcomeEmailParams): Promise<boolean> {
-    const resend = getResendClient();
+/**
+ * Envia email usando a API da Brevo (antiga Sendinblue)
+ * Documentação: https://developers.brevo.com/docs/send-a-transactional-email
+ */
+export async function sendEmail({ email, nome, subject, htmlContent }: WelcomeEmailParams): Promise<boolean> {
+    const apiKey = process.env.BREVO_API_KEY;
 
-    if (!resend) {
-        console.log('⚠️ RESEND_API_KEY não configurada - email não enviado');
+    if (!apiKey) {
+        console.error('⚠️ BREVO_API_KEY não configurada - email não enviado');
         return false;
     }
 
-    const firstName = nome?.split(' ')[0] || 'VIP';
+    const payload = {
+        sender: {
+            name: "Prime AI",
+            email: "nao-responda@prime-ai.app" // Pode usar qualquer domínio, Brevo autentica pela chave
+        },
+        to: [
+            {
+                email: email,
+                name: nome || "Cliente VIP"
+            }
+        ],
+        subject: subject || "Bem-vindo ao Prime AI VIP!",
+        htmlContent: htmlContent || "<p>Bem-vindo!</p>"
+    };
 
     try {
-        const { data, error } = await resend.emails.send({
-            from: 'Prime AI <onboarding@resend.dev>',
-            to: email,
-            subject: '🎉 Bem-vindo ao Prime AI VIP!',
-            html: `
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json',
+                'api-key': apiKey,
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('❌ Erro API Brevo:', JSON.stringify(errorData, null, 2));
+            return false;
+        }
+
+        const data = await response.json();
+        console.log('✅ Email enviado via Brevo:', data);
+        return true;
+
+    } catch (error) {
+        console.error('❌ Falha na conexão com Brevo:', error);
+        return false;
+    }
+}
+
+// Wrapper para manter compatibilidade com código existente de boas-vindas
+export async function sendWelcomeEmail({ email, nome }: { email: string; nome?: string }): Promise<boolean> {
+    const firstName = nome?.split(' ')[0] || 'VIP';
+
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -87,18 +117,12 @@ export async function sendWelcomeEmail({ email, nome }: WelcomeEmailParams): Pro
     </div>
 </body>
 </html>
-            `,
-        });
+    `;
 
-        if (error) {
-            console.error('❌ Erro ao enviar email:', error);
-            return false;
-        }
-
-        console.log('✅ Email de boas-vindas enviado:', data);
-        return true;
-    } catch (error) {
-        console.error('❌ Erro ao enviar email:', error);
-        return false;
-    }
+    return sendEmail({
+        email,
+        nome,
+        subject: "🎉 Bem-vindo ao Prime AI VIP!",
+        htmlContent: html
+    });
 }

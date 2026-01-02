@@ -72,14 +72,12 @@ export async function POST(req: Request) {
 
         // Enviar email com link mágico
         try {
-            const { Resend } = await import('resend');
-            const resend = new Resend(process.env.RESEND_API_KEY);
+            const { sendEmail } = await import('@/lib/send-welcome-email');
 
-            await resend.emails.send({
-                from: 'Prime AI <onboarding@resend.dev>',
-                to: emailNormalizado,
+            await sendEmail({
+                email: emailNormalizado,
                 subject: '🔑 Seu link de acesso VIP - Prime AI',
-                html: `
+                htmlContent: `
 <!DOCTYPE html>
 <html>
 <head>
@@ -127,7 +125,7 @@ export async function POST(req: Request) {
 
             console.log(`✅ Link mágico enviado para ${sanitizeForLogs(emailNormalizado)}`);
         } catch (emailError) {
-            console.error('❌ Erro ao enviar email (Resend):', JSON.stringify(emailError, null, 2));
+            console.error('❌ Erro ao enviar email:', emailError);
             return NextResponse.json({
                 success: false,
                 message: "Erro ao enviar email. Tente novamente."
