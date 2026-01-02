@@ -114,7 +114,8 @@ export async function POST(req: Request) {
         }
 
         // ==================== IDEMPOTÊNCIA ====================
-        const webhookKey = `${orderId}-${evento}`;
+        const eventTimestamp = body.created_at || body.occurred_at || new Date().toISOString();
+        const webhookKey = `${orderId}-${evento}-${eventTimestamp}`;
         if (isWebhookAlreadyProcessed(webhookKey)) {
             console.log(`ℹ️ Webhook já processado: ${webhookKey}`);
             return NextResponse.json({
@@ -234,6 +235,10 @@ async function handleActivation(email: string, orderId: string, nome?: string): 
 async function handleRenewal(email: string, orderId: string): Promise<NextResponse> {
     console.log(`🔄 Processando RENOVAÇÃO para ${sanitizeForLogs(email)}`);
 
+    // Verificar status ANTERIOR (se estava cancelado, é uma reativação)
+    const { verificarAssinatura } = await import('@/lib/supabase');
+    const { ativo: estavaAtivo } = await verificarAssinatura(email);
+
     const ativado = await ativarAssinatura(email, orderId);
 
     if (!ativado) {
@@ -245,6 +250,19 @@ async function handleRenewal(email: string, orderId: string): Promise<NextRespon
     }
 
     console.log(`✅ Assinatura RENOVADA`);
+
+    // Se NÃO estava ativo (ou seja, estava cancelado/expirado), consideramos REATIVAÇÃO -> Enviar Email
+    if (!estavaAtivo) {
+        try {
+            // Pequeno delay para garantir propagação
+            await new Promise(r => setTimeout(r, 1000));
+            await sendWelcomeEmail({ email, nome: "VIP Retornado" });
+            console.log(`📧 Email de boas-vindas enviado (Reativação)`);
+        } catch (error) {
+            console.error(`⚠️ Erro ao enviar email de reativação`);
+        }
+    }
+
     return NextResponse.json({
         success: true,
         message: "Assinatura renovada"
