@@ -398,18 +398,38 @@ export default function ResultsPage() {
                         </button>
                         {expandedSection === 'positives' && (
                             <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
-                                <div className="flex items-start gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                    <span className="text-gray-300 text-sm">Boa estrutura ossea facial</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                    <span className="text-gray-300 text-sm">Proporcoes equilibradas</span>
-                                </div>
-                                <div className="flex items-start gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                    <span className="text-gray-300 text-sm">Alto potencial de melhoria</span>
-                                </div>
+                                {/* Pontos fortes da análise da IA */}
+                                {result.rosto?.pontos_fortes?.length > 0 ? (
+                                    result.rosto.pontos_fortes.map((ponto: string, i: number) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">{ponto}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">Estrutura óssea bem definida para formato {formatFaceShape(faceShape)}</span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">
+                                                {symmetryScore >= 80
+                                                    ? `Excelente simetria facial (${symmetryScore}%) - acima da média`
+                                                    : `Boa simetria facial (${symmetryScore}%) - dentro da norma`}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-start gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm">
+                                                {parseFloat(gap) > 1
+                                                    ? `Alto potencial de evolução com visagismo (+${gap} pontos possíveis)`
+                                                    : `Já próximo do seu potencial máximo - foco em manutenção`}
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
