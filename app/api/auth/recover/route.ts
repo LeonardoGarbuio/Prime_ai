@@ -127,7 +127,7 @@ export async function POST(req: Request) {
 
             console.log(`✅ Link mágico enviado para ${sanitizeForLogs(emailNormalizado)}`);
         } catch (emailError) {
-            console.error('❌ Erro ao enviar email:', emailError);
+            console.error('❌ Erro ao enviar email (Resend):', JSON.stringify(emailError, null, 2));
             return NextResponse.json({
                 success: false,
                 message: "Erro ao enviar email. Tente novamente."
