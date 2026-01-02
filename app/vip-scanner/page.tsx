@@ -183,8 +183,8 @@ export default function VipScannerPage() {
         { subject: 'PROPORÇÃO ÁUREA', A: result.grafico_radar?.proporcao_aurea || 50, B: 96, fullMark: 100 },
     ] : [];
 
-    const currentScore = parseFloat(String(result?.analise_geral?.nota_final || 0));
-    const potentialScore = Math.min(10.0, parseFloat(String(result?.analise_geral?.nota_potencial || (currentScore + 1.5))));
+    const currentScore = parseFloat(String(result?.analise_geral?.nota_final || "7.5"));
+    const potentialScore = Math.min(10.0, parseFloat(String(result?.analise_geral?.nota_potencial || (currentScore + 1.0).toFixed(1))));
     const gap = (potentialScore - currentScore).toFixed(1);
 
     if (!isAuthenticated) {
