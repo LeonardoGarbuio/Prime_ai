@@ -143,26 +143,11 @@ export default function ResultsPage() {
         }
     }, [result, hasSaved, checkAndUnlockBadges, badges]);
 
-    const checkoutLinks: { [key: string]: string } = {
-        "Oval": "https://pay.kiwify.com.br/jA1VCkP",
-        "Redondo": "https://pay.kiwify.com.br/d2V0GRV",
-        "Quadrado": "https://pay.kiwify.com.br/2NpS9yr",
-        "Diamante": "https://pay.kiwify.com.br/mf92DQg",
-        "Triangulo": "https://pay.kiwify.com.br/zUiaLx7",
-        "Coracao": "https://pay.kiwify.com.br/yzdk5qo",
-    };
+    // Link único do produto Prime AI VIP
+    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/7tVLmhI";
 
     const handleCheckout = () => {
-        if (!result) return;
-        try {
-            const faceShape = result.rosto?.formato_rosto || "default";
-            const linkKey = Object.keys(checkoutLinks).find(key =>
-                key.toLowerCase() === faceShape.toLowerCase()
-            ) || "default";
-            window.location.href = checkoutLinks[linkKey] || "https://pay.kiwify.com.br/Ji56d15";
-        } catch {
-            window.location.href = "https://pay.kiwify.com.br/Ji56d15";
-        }
+        window.location.href = VIP_CHECKOUT_LINK;
     };
 
     if (!result) {
