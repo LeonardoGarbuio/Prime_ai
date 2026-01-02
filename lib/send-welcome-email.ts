@@ -1,6 +1,17 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy loading do cliente Resend para evitar erro no build
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend | null {
+    if (!process.env.RESEND_API_KEY) {
+        return null;
+    }
+    if (!resendClient) {
+        resendClient = new Resend(process.env.RESEND_API_KEY);
+    }
+    return resendClient;
+}
 
 interface WelcomeEmailParams {
     email: string;
@@ -8,7 +19,9 @@ interface WelcomeEmailParams {
 }
 
 export async function sendWelcomeEmail({ email, nome }: WelcomeEmailParams): Promise<boolean> {
-    if (!process.env.RESEND_API_KEY) {
+    const resend = getResendClient();
+
+    if (!resend) {
         console.log('⚠️ RESEND_API_KEY não configurada - email não enviado');
         return false;
     }
