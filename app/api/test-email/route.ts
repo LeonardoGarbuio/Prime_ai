@@ -1,14 +1,31 @@
 import { NextResponse } from "next/server";
 import { sendWelcomeEmail } from "@/lib/send-welcome-email";
+import { secureCompare } from "@/lib/security";
 
 // Rota de teste de Email com Debug completo
+// PROTEGIDO: Requer ?secret=SENHA_ADMIN
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
+    const secret = searchParams.get("secret");
     const apiKey = process.env.BREVO_API_KEY;
+    const adminPassword = process.env.ADMIN_MASTER_PASSWORD;
 
+    // ========== AUTENTICAÇÃO ==========
+    if (!adminPassword) {
+        return NextResponse.json({ error: "Sistema não configurado corretamente" }, { status: 500 });
+    }
+
+    if (!secret || !secureCompare(secret, adminPassword)) {
+        return NextResponse.json({
+            error: "Acesso negado",
+            hint: "Use ?secret=SENHA_ADMIN&email=SEU_EMAIL"
+        }, { status: 401 });
+    }
+
+    // ========== VALIDAÇÃO ==========
     if (!email) {
-        return NextResponse.json({ error: "Email obrigatório. Use ?email=seu@email.com" }, { status: 400 });
+        return NextResponse.json({ error: "Email obrigatório. Use ?email=seu@email.com&secret=SENHA" }, { status: 400 });
     }
 
     if (!apiKey) {
