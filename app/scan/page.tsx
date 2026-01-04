@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ArrowRight, AlertCircle, ScanFace, User, Crown, Sparkles } from "lucide-react";
 import { useApiLimiter } from "@/lib/hooks/useApiLimiter";
 import Link from "next/link";
+import imageCompression from 'browser-image-compression';
 
 export default function ScanPage() {
     const router = useRouter();
@@ -21,40 +22,25 @@ export default function ScanPage() {
     const handleAnalyze = async () => {
         if (!faceFile) return;
 
-        const resizeImage = (file: File) => new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = (event) => {
-                const img = new Image();
-                img.src = event.target?.result as string;
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    let width = img.width;
-                    let height = img.height;
-                    const MAX_SIZE = 1024;
-
-                    if (width > height) {
-                        if (width > MAX_SIZE) {
-                            height *= MAX_SIZE / width;
-                            width = MAX_SIZE;
-                        }
-                    } else {
-                        if (height > MAX_SIZE) {
-                            width *= MAX_SIZE / height;
-                            height = MAX_SIZE;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext("2d");
-                    ctx?.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL("image/jpeg", 0.8));
+        const resizeImage = async (file: File) => {
+            try {
+                const options = {
+                    maxSizeMB: 1,
+                    maxWidthOrHeight: 1080,
+                    useWebWorker: true,
+                    fileType: 'image/jpeg'
                 };
-                img.onerror = (error) => reject(error);
-            };
-            reader.onerror = (error) => reject(error);
-        });
+
+                // Compressão inteligente
+                const compressedFile = await imageCompression(file, options);
+
+                // Converte para Base64
+                return await imageCompression.getDataUrlFromFile(compressedFile);
+            } catch (error) {
+                console.error("Compression error:", error);
+                throw error;
+            }
+        };
 
         try {
             const faceBase64 = await resizeImage(faceFile);
@@ -97,10 +83,10 @@ export default function ScanPage() {
                                 </div>
                             ) : (
                                 <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-mono ${remainingUses > 2
-                                        ? "bg-primary/10 border border-primary/30 text-primary"
-                                        : remainingUses > 0
-                                            ? "bg-orange-500/10 border border-orange-500/30 text-orange-400"
-                                            : "bg-red-500/10 border border-red-500/30 text-red-400"
+                                    ? "bg-primary/10 border border-primary/30 text-primary"
+                                    : remainingUses > 0
+                                        ? "bg-orange-500/10 border border-orange-500/30 text-orange-400"
+                                        : "bg-red-500/10 border border-red-500/30 text-red-400"
                                     }`}>
                                     <Sparkles className="w-4 h-4" />
                                     {remainingUses > 0

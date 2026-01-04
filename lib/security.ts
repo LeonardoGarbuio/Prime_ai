@@ -1,9 +1,45 @@
+import 'server-only';
 import crypto from 'crypto';
 
 /**
  * Módulo de Segurança - Prime AI
  * Implementa validações e proteções de nível enterprise
  */
+
+// ... (existing code)
+
+/**
+ * Sanitiza string para logs (remove dados sensíveis)
+ * @param data - Dados a sanitizar
+ * @returns string sanitizada
+ */
+export function sanitizeForLogs(data: unknown): string {
+    if (!data) return '';
+
+    const str = typeof data === 'string' ? data : JSON.stringify(data);
+
+    let sanitized = str;
+
+    // Mascara emails
+    sanitized = sanitized.replace(
+        /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
+        (match, local) => `${local.substring(0, 2)}***@***`
+    );
+
+    // Mascara CPF (simples e formatado)
+    sanitized = sanitized.replace(
+        /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/g,
+        "***.***.***-**"
+    );
+
+    // Mascara Celular/Telefone (formatos comuns BR)
+    sanitized = sanitized.replace(
+        /\b(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})[-.\s]?\d{4}\b/g,
+        "(**) *****-****"
+    );
+
+    return sanitized;
+}
 
 // ==================== WEBHOOK TOKEN VALIDATION (KIWIFY) ====================
 
@@ -220,24 +256,7 @@ export function isValidEmail(email: string): boolean {
     return emailRegex.test(email) && email.length <= 254;
 }
 
-/**
- * Sanitiza string para logs (remove dados sensíveis)
- * @param data - Dados a sanitizar
- * @returns string sanitizada
- */
-export function sanitizeForLogs(data: unknown): string {
-    if (!data) return '';
 
-    const str = typeof data === 'string' ? data : JSON.stringify(data);
-
-    // Mascara emails
-    const sanitized = str.replace(
-        /([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,
-        (match, local) => `${local.substring(0, 2)}***@***`
-    );
-
-    return sanitized;
-}
 
 // ==================== PASSWORD SECURITY ====================
 
