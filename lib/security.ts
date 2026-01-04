@@ -300,8 +300,8 @@ export function getClientIP(request: Request): string {
 
 // ==================== MAGIC LINK TOKENS ====================
 
-// Armazena tokens de recuperação em memória (em produção, usar Redis ou DB)
-const magicTokens = new Map<string, { email: string; expiresAt: number; used: boolean }>();
+// TOKENS MÁGICOS (PERSISTENTE VIA SUPABASE)
+// Substitui Map em memória por chamadas ao banco
 
 /**
  * Gera um token mágico para recuperação de acesso
@@ -309,20 +309,27 @@ const magicTokens = new Map<string, { email: string; expiresAt: number; used: bo
  * @param expiresInMs - Tempo de expiração em ms (padrão: 15 minutos)
  * @returns token gerado
  */
-export function generateMagicToken(email: string, expiresInMs: number = 15 * 60 * 1000): string {
-    // Gera token aleatório seguro
+export async function generateMagicToken(email: string, expiresInMs: number = 15 * 60 * 1000): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + expiresInMs).toISOString();
 
-    // Armazena com expiração
-    magicTokens.set(token, {
-        email: email.toLowerCase().trim(),
-        expiresAt: Date.now() + expiresInMs,
-        used: false
-    });
+    try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_KEY || ''
+        );
 
-    // Limpeza periódica
-    if (magicTokens.size > 100) {
-        cleanupMagicTokens();
+        await supabase.from('auth_tokens').insert({
+            token,
+            email: email.toLowerCase().trim(),
+            expires_at: expiresAt,
+        });
+
+        console.log(`🔑 Token mágico gerado para ${email}`);
+    } catch (error) {
+        console.error('❌ Erro ao gerar token mágico persistente:', error);
+        // Fallback para log apenas se falhar gravemente
     }
 
     return token;
@@ -333,40 +340,48 @@ export function generateMagicToken(email: string, expiresInMs: number = 15 * 60 
  * @param token - Token a validar
  * @returns { valid: boolean, email?: string, error?: string }
  */
-export function validateMagicToken(token: string): { valid: boolean; email?: string; error?: string } {
+export async function validateMagicToken(token: string): Promise<{ valid: boolean; email?: string; error?: string }> {
     if (!token) {
         return { valid: false, error: 'Token não fornecido' };
     }
 
-    const entry = magicTokens.get(token);
+    try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_KEY || ''
+        );
 
-    if (!entry) {
-        return { valid: false, error: 'Token inválido ou não encontrado' };
-    }
+        const { data: entry, error } = await supabase
+            .from('auth_tokens')
+            .select('*')
+            .eq('token', token)
+            .single();
 
-    if (entry.used) {
-        return { valid: false, error: 'Este link já foi utilizado' };
-    }
-
-    if (Date.now() > entry.expiresAt) {
-        magicTokens.delete(token);
-        return { valid: false, error: 'Link expirado. Solicite um novo.' };
-    }
-
-    // Marca como usado
-    entry.used = true;
-
-    // Remove após uso para segurança
-    setTimeout(() => magicTokens.delete(token), 1000);
-
-    return { valid: true, email: entry.email };
-}
-
-function cleanupMagicTokens() {
-    const now = Date.now();
-    for (const [token, entry] of magicTokens.entries()) {
-        if (now > entry.expiresAt || entry.used) {
-            magicTokens.delete(token);
+        if (error || !entry) {
+            return { valid: false, error: 'Token inválido ou não encontrado' };
         }
+
+        if (entry.used) {
+            return { valid: false, error: 'Este link já foi utilizado' };
+        }
+
+        if (new Date(entry.expires_at).getTime() < Date.now()) {
+            return { valid: false, error: 'Link expirado. Solicite um novo.' };
+        }
+
+        // Marca como usado
+        await supabase
+            .from('auth_tokens')
+            .update({ used: true })
+            .eq('token', token);
+
+        return { valid: true, email: entry.email };
+
+    } catch (error) {
+        console.error('Erro ao validar token:', error);
+        return { valid: false, error: 'Erro interno ao validar token' };
     }
 }
+
+// Cleanup agora é feito via função do Supabase ou Cron Job

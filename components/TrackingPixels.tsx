@@ -108,10 +108,33 @@ export const AnalyticsEvents = {
 
 // Componente combinado para usar no layout
 export default function TrackingPixels() {
+    // Importado dinamicamente para evitar erro de hook no servidor se não fosse 'use client'
+    // Mas como este arquivo já é 'use client', podemos usar hooks diretos se estivermos dentro do Provider
+    // Porém, TrackingPixels é usado no layout root, então precisamos garantir que temos acesso ao contexto
+    // UMA ABORDAGEM MELHOR: TrackingPixelsContainer
+
     return (
-        <>
-            <FacebookPixel />
-            <GoogleAnalytics />
-        </>
+        <TrackingPixelsContent />
     );
 }
+
+function TrackingPixelsContent() {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { useCookieConsent } = require('@/contexts/CookieConsentContext');
+        const { consent } = useCookieConsent();
+
+        if (consent !== true) return null;
+
+        return (
+            <>
+                <FacebookPixel />
+                <GoogleAnalytics />
+            </>
+        );
+    } catch {
+        // Fallback seguro se contexto não existir (não renderiza)
+        return null;
+    }
+}
+

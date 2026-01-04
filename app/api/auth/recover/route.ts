@@ -67,7 +67,7 @@ export async function POST(req: Request) {
         }
 
         // Gerar token mágico (15 minutos de validade)
-        const token = generateMagicToken(emailNormalizado, 15 * 60 * 1000);
+        const token = await generateMagicToken(emailNormalizado, 15 * 60 * 1000);
         const magicLink = `${BASE_URL}/api/auth/magic?token=${token}`;
 
         // Enviar email com link mágico

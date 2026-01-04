@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Outfit, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import TrackingPixels from "@/components/TrackingPixels";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -109,8 +111,11 @@ export default function RootLayout({
         className={`${outfit.variable} ${jetbrainsMono.variable} antialiased bg-background text-foreground`}
         suppressHydrationWarning
       >
-        <TrackingPixels />
-        {children}
+        <CookieConsentProvider>
+          <TrackingPixels />
+          {children}
+          <CookieBanner />
+        </CookieConsentProvider>
         <Analytics />
       </body>
     </html>

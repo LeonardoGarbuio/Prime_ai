@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     }
 
     // Validar token
-    const { valid, email, error } = validateMagicToken(token);
+    const { valid, email, error } = await validateMagicToken(token);
 
     if (!valid || !email) {
         return redirectWithError(error || 'Link inválido');
