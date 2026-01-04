@@ -168,7 +168,7 @@ export default function ResultsPage() {
     // Compartilhar no WhatsApp
     const handleShareWhatsApp = () => {
         const score = result?.analise_geral?.nota_final || "7.5";
-        const text = `Fiz uma análise facial com IA e tirei *${score}/10*! Testa a sua: primeai-amber.vercel.app`;
+        const text = `Fiz uma análise facial com IA e tirei *${score}/10*! Testa a sua: https://useprime.ia.br/`;
         const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
     };
@@ -183,14 +183,14 @@ export default function ResultsPage() {
                 await navigator.share({
                     title: 'Minha Análise Prime AI',
                     text: `🔥 Minha nota: ${score}/10 | Formato: ${faceShape}`,
-                    url: 'https://primeai-amber.vercel.app',
+                    url: 'https://useprime.ia.br/',
                 });
             } catch (err) {
                 console.log('Erro ao compartilhar:', err);
             }
         } else {
             // Fallback: copiar para clipboard
-            const text = `🔥 Minha nota Prime AI: ${score}/10 | Formato: ${faceShape}\n\nDescubra a sua: https://primeai-amber.vercel.app`;
+            const text = `🔥 Minha nota Prime AI: ${score}/10 | Formato: ${faceShape}\n\nDescubra a sua: https://useprime.ia.br/`;
             navigator.clipboard.writeText(text);
             alert('Link copiado para compartilhar!');
         }
