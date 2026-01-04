@@ -419,7 +419,7 @@ export default function VipScannerPage() {
                             </div>
                             <Button
                                 className="w-full bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-bold py-7 text-lg shadow-[0_0_30px_rgba(234,179,8,0.2)] hover:shadow-[0_0_40px_rgba(234,179,8,0.4)] transition-all transform hover:-translate-y-1"
-                                onClick={() => window.open('https://pay.kiwify.com.br/7lYLmhI', '_blank')}
+                                onClick={() => window.open('https://pay.kiwify.com.br/Smq4FoG', '_blank')}
                             >
                                 QUERO ACESSO VIP
                             </Button>

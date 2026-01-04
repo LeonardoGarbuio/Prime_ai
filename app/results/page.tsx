@@ -159,7 +159,7 @@ export default function ResultsPage() {
     }, [result, hasSaved, checkAndUnlockBadges, badges]);
 
     // Link único do produto Prime AI VIP
-    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/7lYLmhI";
+    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/Smq4FoG";
 
     const handleCheckout = () => {
         window.location.href = VIP_CHECKOUT_LINK;
