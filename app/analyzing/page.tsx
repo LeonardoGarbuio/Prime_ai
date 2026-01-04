@@ -149,6 +149,11 @@ export default function AnalyzingPage() {
                 body: JSON.stringify({ faceImage, bodyImage, metrics }),
             })
                 .then(async (res) => {
+                    // Tratamento específico para erro 429 (Quota Exceeded)
+                    if (res.status === 429) {
+                        throw new Error("QUOTA_EXCEEDED");
+                    }
+
                     if (!res.ok) {
                         const errorText = await res.text();
                         console.error("API Error Response:", errorText);
@@ -182,6 +187,8 @@ export default function AnalyzingPage() {
 
                 if (error.message === "FACE_NOT_DETECTED") {
                     alert("⚠️ Nenhum rosto humano detectado!\n\nPor favor, envie uma foto real do seu rosto.");
+                } else if (error.message === "QUOTA_EXCEEDED") {
+                    alert("🚦 Muita gente usando agora!\n\nEspere 10 segundos e tente de novo.\n\nOu torne-se VIP para análises ilimitadas!");
                 } else {
                     alert("Erro na análise. Verifique sua conexão ou tente outra foto.");
                 }
@@ -268,7 +275,7 @@ export default function AnalyzingPage() {
                             <img
                                 src={userImage}
                                 alt="User Scan"
-                                className="w-full h-full object-cover opacity-50 grayscale contrast-125"
+                                className="w-full h-full object-cover grayscale contrast-[1.2] brightness-90"
                             />
                         )}
 
@@ -276,7 +283,7 @@ export default function AnalyzingPage() {
                         <div className="absolute inset-0 bg-[linear-gradient(rgba(57,255,20,0.2)_1px,transparent_1px),linear-gradient(90deg,rgba(57,255,20,0.2)_1px,transparent_1px)] bg-[size:20px_20px]" />
 
                         {/* Radar Scan Line */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/50 to-transparent h-1/2 w-full animate-[scan_2s_linear_infinite]" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#39FF14]/50 to-transparent h-[15%] w-full animate-[scan_2s_linear_infinite] opacity-80" />
 
                         {/* Rotating Rings */}
                         <div className="absolute inset-0 border-2 border-primary/30 rounded-full animate-[spin_4s_linear_infinite]" />

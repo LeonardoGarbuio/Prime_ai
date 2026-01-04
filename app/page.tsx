@@ -96,7 +96,7 @@ export default function Home() {
               <Link href="/vip-scanner">
                 <Button
                   size="lg"
-                  className="group text-lg h-16 px-12 font-bold bg-primary hover:bg-primary/90 text-black transition-all duration-300 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
+                  className="group text-lg h-16 px-12 transition-all duration-300 shadow-[0px_4px_15px_rgba(124,58,237,0.5)] hover:shadow-[0px_4px_25px_rgba(124,58,237,0.6)] hover:brightness-110 bg-gradient-to-br from-[#4338CA] to-[#7C3AED] text-white/90"
                 >
                   VIP
                   <Crown className="w-5 h-5 ml-2 fill-current" />

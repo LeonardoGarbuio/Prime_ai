@@ -3,9 +3,9 @@
 @theme {
   --color-background: #000000;
   --color-foreground: #ffffff;
-  --color-primary: #39FF14;
+  --color-primary: #8A2BE2;
   --color-secondary: #1A1A1A;
-  --color-accent: #FF0000;
+  --color-accent: #10B981;
 
   --font-sans: var(--font-outfit);
   --font-mono: var(--font-jetbrains-mono);
@@ -38,5 +38,25 @@ body {
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes scan {
+  0% {
+    top: -20%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 120%;
+    opacity: 0;
   }
 }

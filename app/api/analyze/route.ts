@@ -1,5 +1,24 @@
 import { NextResponse } from "next/server";
 
+// 🔧 HELPER: Extrai JSON de texto (incluindo blocos Markdown)
+function extractJSON(text: string): string | null {
+    if (!text) return null;
+
+    // 1. Tenta extrair de bloco Markdown ```json ... ```
+    const markdownMatch = text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+    if (markdownMatch) {
+        return markdownMatch[1].trim();
+    }
+
+    // 2. Tenta extrair JSON puro (sem Markdown)
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        return jsonMatch[0].trim();
+    }
+
+    return null;
+}
+
 export async function POST(req: Request) {
     // --- SUA CHAVE ---
     const apiKey = process.env.GOOGLE_API_KEY;
@@ -50,7 +69,7 @@ export async function POST(req: Request) {
             ];
         }
 
-        console.log(`🎯 Modo: ${mode.toUpperCase()} | Fila:`, candidateModels.map(m => m.replace("models/", "")));
+        console.log(`🎯 Modo: ${mode.toUpperCase()} | Fila: `, candidateModels.map(m => m.replace("models/", "")));
 
         // Remove duplicatas mantendo a ordem de prioridade
         const uniqueCandidates = [...new Set(candidateModels)];
@@ -89,15 +108,15 @@ export async function POST(req: Request) {
 
         if (hasDetailedMetrics) {
             metricsContext = `
-            📊 DADOS TÉCNICOS (VERDADE ABSOLUTA - USE ISTO):
-            - Formato Principal: ${normalizedShape} (Confiança: ${metrics.confianca}%)
-            - Segunda Opção: ${metrics.segunda_opcao ? normalizeShape(metrics.segunda_opcao) : "N/A"} (Confiança: ${metrics.confianca_segunda || 0}%)
-            - Ângulo Mandíbula: ${(metrics.angulo_mandibula_medio || 0).toFixed(1)}°
-            - Proporção Altura/Largura: ${(metrics.prop_altura_largura || 0).toFixed(2)}
-            - Índice de Afilamento: ${(metrics.indice_afilamento || 0).toFixed(1)}%
-            - SCORE GEOMÉTRICO (BEAUTY SCORE): ${metrics.beauty_score || "N/A"}
+            📊 DADOS TÉCNICOS(VERDADE ABSOLUTA - USE ISTO):
+- Formato Principal: ${normalizedShape} (Confiança: ${metrics.confianca}%)
+- Segunda Opção: ${metrics.segunda_opcao ? normalizeShape(metrics.segunda_opcao) : "N/A"} (Confiança: ${metrics.confianca_segunda || 0}%)
+- Ângulo Mandíbula: ${(metrics.angulo_mandibula_medio || 0).toFixed(1)}°
+- Proporção Altura / Largura: ${(metrics.prop_altura_largura || 0).toFixed(2)}
+- Índice de Afilamento: ${(metrics.indice_afilamento || 0).toFixed(1)}%
+    - SCORE GEOMÉTRICO(BEAUTY SCORE): ${metrics.beauty_score || "N/A"}
             
-            INSTRUÇÃO CRÍTICA: O formato do rosto É ${normalizedShape}. Não tente adivinhar outro. Use EXATAMENTE esse valor.
+            INSTRUÇÃO CRÍTICA: O formato do rosto É ${normalizedShape}. Não tente adivinhar outro.Use EXATAMENTE esse valor.
             INSTRUÇÃO CRÍTICA: A "Nota do Look" DEVE ser EXATAMENTE ${metrics.beauty_score} (se disponível). Se não, calcule com base na geometria.
             `;
         }
@@ -115,175 +134,175 @@ export async function POST(req: Request) {
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Estética e Imagem Pessoal.
             CONTEXTO DO USUÁRIO: "${userContext || 'Análise de look do dia'}"
             
-            ⚠️ VALIDAÇÃO CRÍTICA (EXECUTAR PRIMEIRO):
-            1. Verifique se há um ROSTO HUMANO REAL na imagem.
+            ⚠️ VALIDAÇÃO CRÍTICA(EXECUTAR PRIMEIRO):
+1. Verifique se há um ROSTO HUMANO REAL na imagem.
             2. Se a imagem contiver: animais, objetos, desenhos, memes, paisagens, personagens fictícios, IA gerada, ou qualquer coisa que NÃO seja um rosto humano real - REJEITE IMEDIATAMENTE.
             3. Se não houver rosto humano, retorne APENAS este JSON:
-            {
-                "error": "face_not_detected",
-                "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
-            }
+{
+    "error": "face_not_detected",
+        "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
+}
             
             SE HOUVER UM ROSTO HUMANO REAL, continue com a análise:
-            
-            TAREFA: Realizar uma análise COMPLETA (Forense + Estilo).
+
+TAREFA: Realizar uma análise COMPLETA(Forense + Estilo).
             O usuário é VIP e pagou para ter TUDO: Análise geométrica precisa E dicas de estilo.
 
             ⛔ REGRAS ABSOLUTAS - PROIBIÇÕES:
-            - NUNCA sugira cirurgias plásticas (rinoplastia, bichectomia, lifting, etc)
-            - NUNCA sugira procedimentos invasivos (botox, preenchimento, harmonização facial médica)
-            - NUNCA sugira tratamentos dermatológicos agressivos
+- NUNCA sugira cirurgias plásticas(rinoplastia, bichectomia, lifting, etc)
+    - NUNCA sugira procedimentos invasivos(botox, preenchimento, harmonização facial médica)
+        - NUNCA sugira tratamentos dermatológicos agressivos
             - NUNCA mencione "corrigir" defeitos físicos permanentes
-            - Foque APENAS em VISAGISMO: como PARECER melhor, não como MUDAR o rosto
+                - Foque APENAS em VISAGISMO: como PARECER melhor, não como MUDAR o rosto
 
-            ✅ FOCO TOTAL EM VISAGISMO (O QUE VOCÊ DEVE SUGERIR):
-            - Cortes de cabelo ideais para o formato do rosto
-            - Estilo de barba que harmoniza a mandíbula
-            - Armação de óculos ideal
+            ✅ FOCO TOTAL EM VISAGISMO(O QUE VOCÊ DEVE SUGERIR):
+- Cortes de cabelo ideais para o formato do rosto
+    - Estilo de barba que harmoniza a mandíbula
+        - Armação de óculos ideal
             - Maquiagem e contorno
-            - Cores de roupa que favorecem
-            - Ângulos melhores para fotos
-            - Postura e expressão facial
-            - Acessórios que valorizam
-            - Penteados e styling de cabelo
+                - Cores de roupa que favorecem
+                    - Ângulos melhores para fotos
+                        - Postura e expressão facial
+                            - Acessórios que valorizam
+                                - Penteados e styling de cabelo
 
             ${metricsContext}
 
-            DIRETRIZES DE ANÁLISE PROFUNDA (Chain of Thought):
-            1. **Mapeamento de Landmarks:** Localize mentalmente Trichion, Glabella, Menton, Zigomas e Gonions.
-            2. **Índice Facial:** Calcule a proporção Altura vs Largura Bizigomática.
-            3. **Ângulo Gonial:** Estime o ângulo da mandíbula. <115º indica quadrado/forte. >125º indica oval/suave.
-            4. **Simetria:** Compare o lado esquerdo vs direito.
-            5. **Estilo & Vibe:** Analise a roupa, maquiagem e cabelo atuais para o contexto informado.
+            DIRETRIZES DE ANÁLISE PROFUNDA(Chain of Thought):
+1. ** Mapeamento de Landmarks:** Localize mentalmente Trichion, Glabella, Menton, Zigomas e Gonions.
+            2. ** Índice Facial:** Calcule a proporção Altura vs Largura Bizigomática.
+            3. ** Ângulo Gonial:** Estime o ângulo da mandíbula. < 115º indica quadrado / forte. > 125º indica oval / suave.
+            4. ** Simetria:** Compare o lado esquerdo vs direito.
+            5. ** Estilo & Vibe:** Analise a roupa, maquiagem e cabelo atuais para o contexto informado.
 
-            SAÍDA JSON (ESTRITA - SUPERSET):
-            {
-                "analise_geral": { 
-                    "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA e VARIADO, nem todo mundo é 7+), 
-                    "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar COM VISAGISMO),
-                    "idade_real_estimada": (Número inteiro),
-                    "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
-                    "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
-                    "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
-                },
-                "rosto": { 
-                    "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
-                    "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "pontos_de_atencao": ["Observação de visagismo 1 - ex: cabelo muito rente destaca as orelhas", "Observação 2 - ex: barba pode definir mais a mandíbula"], 
-                    "analise_pele": "Análise da textura e tom de pele para recomendações de skincare básico." 
-                },
-                "grafico_radar": { 
-                    "simetria": (0-100), 
-                    "pele": (0-100), 
-                    "estrutura_ossea": (0-100), 
-                    "terco_medio": (0-100), 
-                    "proporcao_aurea": (0-100) 
-                },
-                "corpo_postura": { 
-                    "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.", 
-                    "gordura_estimada": "Baixa" | "Média" | "Alta" 
-                },
-                "plano_harmonizacao": { 
-                    "passo_1_imediato": "VISAGISMO: Ex: usar barba com degradê para alongar o rosto", 
-                    "passo_2_rotina": "CUIDADOS: Ex: hidratante facial e protetor solar diário", 
-                    "passo_3_longo_prazo": "ESTILO: Ex: investir em óculos com armação que suavize os traços" 
-                },
-                "analise_cromatica": {
-                    "estacao": "Inverno Brilhante | Outono Escuro | Verão Suave | etc",
-                    "descricao": "Explicação breve do porquê desta estação baseada em pele/cabelo/olhos",
-                    "paleta_ideal": ["#HEX", "#HEX", "#HEX", "#HEX", "#HEX"]
-                },
-                "guia_vestuario": {
-                    "pecas_chave": ["Item 1 (ex: Jaqueta de Couro)", "Item 2 (ex: Camisa Gola V)"],
-                    "evitar": ["Item 1", "Estampa X"],
-                    "acessorios": "Sugestão específica (ex: Óculos aviador dourado)"
-                },
-                "feedback_rapido": {
-                    "nota_do_look": (0-10 baseada na produção atual),
-                    "vibe_transmitida": "Ex: Elegante, Cansada, Poderosa, Desleixada",
-                    "o_que_funcionou": "Ex: Esse batom destacou seus lábios.",
-                    "o_que_matou_o_look": "Ex: O cabelo muito lambido ressaltou a testa."
-                },
-                "sugestao_imediata": {
-                    "corte_ideal": "Ex: Corte com volume no topo para alongar o rosto",
-                    "truque_de_5_minutos": "Ex: Solte dois fios na frente para suavizar o queixo.",
-                    "produto_chave": "Ex: Pomada matte para texturizar o cabelo."
-                },
-                "adaptacao_trend": "Se o usuário pediu uma tendência, explique como adaptar. Se não, dê uma dica de tendência atual."
-            }`;
+            SAÍDA JSON(ESTRITA - SUPERSET):
+{
+    "analise_geral": {
+        "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA e VARIADO, nem todo mundo é 7 +),
+        "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar COM VISAGISMO),
+        "idade_real_estimada": (Número inteiro),
+        "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
+            "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
+                "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
+    },
+    "rosto": {
+        "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração",
+            "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"],
+                "pontos_de_atencao": ["Observação de visagismo 1 - ex: cabelo muito rente destaca as orelhas", "Observação 2 - ex: barba pode definir mais a mandíbula"],
+                    "analise_pele": "Análise da textura e tom de pele para recomendações de skincare básico."
+    },
+    "grafico_radar": {
+        "simetria": (0 - 100),
+            "pele": (0 - 100),
+                "estrutura_ossea": (0 - 100),
+                    "terco_medio": (0 - 100),
+                        "proporcao_aurea": (0 - 100)
+    },
+    "corpo_postura": {
+        "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.",
+            "gordura_estimada": "Baixa" | "Média" | "Alta"
+    },
+    "plano_harmonizacao": {
+        "passo_1_imediato": "VISAGISMO: Ex: usar barba com degradê para alongar o rosto",
+            "passo_2_rotina": "CUIDADOS: Ex: hidratante facial e protetor solar diário",
+                "passo_3_longo_prazo": "ESTILO: Ex: investir em óculos com armação que suavize os traços"
+    },
+    "analise_cromatica": {
+        "estacao": "Inverno Brilhante | Outono Escuro | Verão Suave | etc",
+            "descricao": "Explicação breve do porquê desta estação baseada em pele/cabelo/olhos",
+                "paleta_ideal": ["#HEX", "#HEX", "#HEX", "#HEX", "#HEX"]
+    },
+    "guia_vestuario": {
+        "pecas_chave": ["Item 1 (ex: Jaqueta de Couro)", "Item 2 (ex: Camisa Gola V)"],
+            "evitar": ["Item 1", "Estampa X"],
+                "acessorios": "Sugestão específica (ex: Óculos aviador dourado)"
+    },
+    "feedback_rapido": {
+        "nota_do_look": (0 - 10 baseada na produção atual),
+        "vibe_transmitida": "Ex: Elegante, Cansada, Poderosa, Desleixada",
+            "o_que_funcionou": "Ex: Esse batom destacou seus lábios.",
+                "o_que_matou_o_look": "Ex: O cabelo muito lambido ressaltou a testa."
+    },
+    "sugestao_imediata": {
+        "corte_ideal": "Ex: Corte com volume no topo para alongar o rosto",
+            "truque_de_5_minutos": "Ex: Solte dois fios na frente para suavizar o queixo.",
+                "produto_chave": "Ex: Pomada matte para texturizar o cabelo."
+    },
+    "adaptacao_trend": "Se o usuário pediu uma tendência, explique como adaptar. Se não, dê uma dica de tendência atual."
+} `;
 
         } else {
             // === MODO FORENSE (PADRÃO) ===
             promptText = `
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Estética.
             
-            ⚠️ VALIDAÇÃO CRÍTICA (EXECUTAR PRIMEIRO):
-            1. Verifique se há um ROSTO HUMANO REAL na imagem.
+            ⚠️ VALIDAÇÃO CRÍTICA(EXECUTAR PRIMEIRO):
+1. Verifique se há um ROSTO HUMANO REAL na imagem.
             2. Se a imagem contiver: animais, objetos, desenhos, memes, paisagens, personagens fictícios, IA gerada, ou qualquer coisa que NÃO seja um rosto humano real - REJEITE IMEDIATAMENTE.
             3. Se não houver rosto humano, retorne APENAS este JSON:
-            {
-                "error": "face_not_detected",
-                "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
-            }
+{
+    "error": "face_not_detected",
+        "message": "Nenhum rosto humano detectado. Por favor, envie uma foto do seu rosto."
+}
             
             SE HOUVER UM ROSTO HUMANO REAL, continue com a análise:
-            
-            TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
+
+TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na imagem.
 
             ⛔ REGRAS ABSOLUTAS - PROIBIÇÕES:
-            - NUNCA sugira cirurgias plásticas (rinoplastia, bichectomia, lifting, etc)
-            - NUNCA sugira procedimentos invasivos (botox, preenchimento, harmonização facial médica)
-            - NUNCA mencione "corrigir" defeitos físicos permanentes
+- NUNCA sugira cirurgias plásticas(rinoplastia, bichectomia, lifting, etc)
+    - NUNCA sugira procedimentos invasivos(botox, preenchimento, harmonização facial médica)
+        - NUNCA mencione "corrigir" defeitos físicos permanentes
             - Foque APENAS em VISAGISMO: como PARECER melhor através de estilo
 
             ✅ EXEMPLOS DE SUGESTÕES VÁLIDAS:
-            - Corte de cabelo ideal para o formato
-            - Estilo de barba para definir a mandíbula
-            - Óculos que harmonizam o rosto
+- Corte de cabelo ideal para o formato
+    - Estilo de barba para definir a mandíbula
+        - Óculos que harmonizam o rosto
             - Ângulos melhores para fotos
-            - Skincare básico (hidratante, protetor)
+                - Skincare básico(hidratante, protetor)
 
             ${metricsContext}
 
-            DIRETRIZES DE ANÁLISE PROFUNDA (Chain of Thought):
-            1. **Mapeamento de Landmarks:** Localize mentalmente Trichion, Glabella, Menton, Zigomas e Gonions.
-            2. **Índice Facial:** Calcule a proporção Altura vs Largura Bizigomática.
-            3. **Ângulo Gonial:** Estime o ângulo da mandíbula. <115º indica quadrado/forte. >125º indica oval/suave.
-            4. **Simetria:** Compare o lado esquerdo vs direito.
+            DIRETRIZES DE ANÁLISE PROFUNDA(Chain of Thought):
+1. ** Mapeamento de Landmarks:** Localize mentalmente Trichion, Glabella, Menton, Zigomas e Gonions.
+            2. ** Índice Facial:** Calcule a proporção Altura vs Largura Bizigomática.
+            3. ** Ângulo Gonial:** Estime o ângulo da mandíbula. < 115º indica quadrado / forte. > 125º indica oval / suave.
+            4. ** Simetria:** Compare o lado esquerdo vs direito.
 
-            SAÍDA: APENAS O JSON ABAIXO.
+    SAÍDA: APENAS O JSON ABAIXO.
             {
-                "analise_geral": { 
-                    "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA, nem todo mundo é 7+), 
+                "analise_geral": {
+                    "nota_final": (Número decimal entre 4.0 e 10.0 - seja REALISTA, nem todo mundo é 7 +),
                     "nota_potencial": (Número decimal entre nota_final e 10.0 - o máximo que essa pessoa pode alcançar COM VISAGISMO),
                     "idade_real_estimada": (Número inteiro),
                     "potencial_genetico": "Baixo" | "Médio" | "Alto" | "Elite",
-                    "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
-                    "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
+                        "arquetipo": "The Hunter | Noble | Charmer | Creator | Ruler | Mystic | Warrior | Angel",
+                            "resumo_brutal": "Uma avaliação técnica, direta e sem filtros sobre a harmonia facial."
                 },
-                "rosto": { 
-                    "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração", 
-                    "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"], 
-                    "pontos_de_atencao": ["Observação de visagismo - ex: barba pode definir mais a mandíbula", "Dica de estilo - ex: cabelo com volume no topo alonga o rosto"], 
-                    "analise_pele": "Análise da textura para recomendações de skincare básico (hidratante, protetor)." 
+                "rosto": {
+                    "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração",
+                        "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"],
+                            "pontos_de_atencao": ["Observação de visagismo - ex: barba pode definir mais a mandíbula", "Dica de estilo - ex: cabelo com volume no topo alonga o rosto"],
+                                "analise_pele": "Análise da textura para recomendações de skincare básico (hidratante, protetor)."
                 },
-                "grafico_radar": { 
-                    "simetria": (0-100), 
-                    "pele": (0-100), 
-                    "estrutura_ossea": (0-100), 
-                    "terco_medio": (0-100), 
-                    "proporcao_aurea": (0-100) 
+                "grafico_radar": {
+                    "simetria": (0 - 100),
+                        "pele": (0 - 100),
+                            "estrutura_ossea": (0 - 100),
+                                "terco_medio": (0 - 100),
+                                    "proporcao_aurea": (0 - 100)
                 },
-                "corpo_postura": { 
-                    "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.", 
-                    "gordura_estimada": "Baixa" | "Média" | "Alta" 
+                "corpo_postura": {
+                    "analise": "Se visível, descreva. Se não, 'Apenas rosto visível'.",
+                        "gordura_estimada": "Baixa" | "Média" | "Alta"
                 },
-                 "plano_harmonizacao": { 
-                    "passo_1_imediato": "VISAGISMO: Ex: usar barba degradê para definir mandíbula", 
-                    "passo_2_rotina": "CUIDADOS: Ex: hidratante e protetor solar diário", 
-                    "passo_3_longo_prazo": "ESTILO: Ex: experimentar óculos com armação que suavize os traços" 
+                "plano_harmonizacao": {
+                    "passo_1_imediato": "VISAGISMO: Ex: usar barba degradê para definir mandíbula",
+                        "passo_2_rotina": "CUIDADOS: Ex: hidratante e protetor solar diário",
+                            "passo_3_longo_prazo": "ESTILO: Ex: experimentar óculos com armação que suavize os traços"
                 }
-            }`;
+            } `;
         }
 
         // Construção do Payload
@@ -311,18 +330,18 @@ export async function POST(req: Request) {
             throw new Error("Nenhum modelo disponível na API.");
         }
 
+        // Loop de modelos
         for (const modelName of uniqueCandidates) {
             console.log(`🤖 TENTANDO MODELO: ${modelName}...`);
+
             const generateUrl = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`;
 
             // Configura temperatura e seed para resultados CONSISTENTES
-            // Importante: mesma foto = mesmo resultado (análise cromática, estilo, etc)
             const currentConfig = {
-                temperature: 0.1, // Quase determinístico para consistência
-                seed: 42, // Seed fixo garante reprodutibilidade
+                temperature: 0.1,
+                seed: 42,
             };
 
-            // Injeta config no body (clone para não alterar o original se precisasse)
             const currentBody = { ...requestBody, generationConfig: currentConfig };
 
             try {
@@ -342,10 +361,6 @@ export async function POST(req: Request) {
                 const errorBody = await genResp.json().catch(() => ({}));
                 const errorMessage = errorBody.error?.message || genResp.statusText;
                 console.warn(`⚠️ FALHA em ${modelName} (${genResp.status}): ${errorMessage}`);
-
-                // Se for erro 400 (Bad Request), o prompt pode estar ruim, então talvez não adiante mudar de modelo.
-                // Mas se for 429 (Quota) ou 503, TEMOS que mudar.
-                // Vamos continuar o loop de qualquer jeito.
 
             } catch (e: any) {
                 console.warn(`⚠️ ERRO DE REDE em ${modelName}: ${e.message}`);
@@ -393,11 +408,11 @@ export async function POST(req: Request) {
                         if (groqResponse.ok) {
                             const groqData = await groqResponse.json();
                             const groqText = groqData.choices?.[0]?.message?.content || "";
-                            const groqJsonMatch = groqText.match(/\{[\s\S]*\}/);
+                            const groqJsonString = extractJSON(groqText);
 
-                            if (groqJsonMatch) {
+                            if (groqJsonString) {
                                 console.log(`✅ GROQ: Sucesso com ${groqModel}!`);
-                                const groqResult = JSON.parse(groqJsonMatch[0]);
+                                const groqResult = JSON.parse(groqJsonString);
 
                                 if (hasDetailedMetrics && groqResult.rosto) {
                                     groqResult.rosto.formato_rosto = metrics.formato_rosto;

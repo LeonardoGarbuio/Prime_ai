@@ -275,8 +275,8 @@ export default function ResultsPage() {
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                                            <span className="text-xs font-mono text-primary tracking-widest">PRIME AI ANALYTICS</span>
+                                            <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
+                                            <span className="text-xs font-mono text-white tracking-widest">PRIME AI ANALYTICS</span>
                                         </div>
                                         <h3 className="text-3xl font-black text-white italic uppercase leading-none">{getArchetype()}</h3>
                                     </div>
@@ -304,9 +304,24 @@ export default function ResultsPage() {
                                             <p className="text-[10px] text-gray-400 uppercase">Sua Nota</p>
                                             <p className="text-xl font-bold text-white">{currentScore}</p>
                                         </div>
-                                        <div className="bg-primary/10 p-3 rounded-xl border border-primary/30">
-                                            <p className="text-[10px] text-primary/80 uppercase">Pode Atingir</p>
-                                            <p className="text-xl font-bold text-primary">{potentialScore}</p>
+                                        <div className={`p-3 rounded-xl border ${potentialScore >= 8
+                                            ? 'bg-[#39FF14]/10 border-[#39FF14]/30'
+                                            : potentialScore >= 6
+                                                ? 'bg-[#FFD60A]/10 border-[#FFD60A]/30'
+                                                : 'bg-[#FF453A]/10 border-[#FF453A]/30'
+                                            }`}>
+                                            <p className={`text-[10px] uppercase ${potentialScore >= 8
+                                                ? 'text-[#39FF14]/80'
+                                                : potentialScore >= 6
+                                                    ? 'text-[#FFD60A]/80'
+                                                    : 'text-[#FF453A]/80'
+                                                }`}>Pode Atingir</p>
+                                            <p className={`text-xl font-bold ${potentialScore >= 8
+                                                ? 'text-[#39FF14]'
+                                                : potentialScore >= 6
+                                                    ? 'text-[#FFD60A]'
+                                                    : 'text-[#FF453A]'
+                                                }`}>{potentialScore}</p>
                                         </div>
                                     </div>
                                     <div className="text-center">
@@ -404,7 +419,7 @@ export default function ResultsPage() {
                 {/* === RADAR CHART (Pontos Cegos) === */}
                 <section className="space-y-6">
                     <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
-                        ONDE ESTAO SEUS <span className="text-primary">PONTOS CEGOS</span>
+                        ONDE ESTAO SEUS PONTOS CEGOS
                     </h2>
 
                     <div className="w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '350px' }}>
@@ -414,7 +429,7 @@ export default function ResultsPage() {
                                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 'bold' }} />
                                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                                 <Radar name="Atual" dataKey="A" stroke="#ffffff" strokeWidth={2} fill="#ffffff" fillOpacity={0.1} />
-                                <Radar name="Potencial" dataKey="B" stroke="#39FF14" strokeWidth={3} strokeDasharray="4 4" fill="#39FF14" fillOpacity={0.2} />
+                                <Radar name="Potencial" dataKey="B" stroke="#10B981" strokeWidth={3} strokeDasharray="4 4" fill="#10B981" fillOpacity={0.2} />
                             </RadarChart>
                         </ResponsiveContainer>
 
@@ -424,8 +439,8 @@ export default function ResultsPage() {
                                 <span className="text-gray-400">Atual</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-primary/20 border border-primary border-dashed rounded-full" />
-                                <span className="text-primary font-bold">Potencial</span>
+                                <div className="w-3 h-3 bg-[#10B981]/20 border border-[#10B981] border-dashed rounded-full" />
+                                <span className="text-[#10B981] font-bold">Potencial</span>
                             </div>
                         </div>
                     </div>
@@ -433,7 +448,7 @@ export default function ResultsPage() {
 
                 {/* === INSIGHTS (Expandable Boxes) === */}
                 <section className="space-y-4">
-                    <h2 className="text-xl font-bold text-white tracking-wider border-l-4 border-primary pl-4">
+                    <h2 className="text-xl font-bold text-white tracking-wider pl-4">
                         INSIGHTS
                     </h2>
 
@@ -555,7 +570,7 @@ export default function ResultsPage() {
                     <div className="space-y-4 relative z-10">
                         <h2 className="text-4xl md:text-6xl font-black text-white leading-none tracking-tighter italic transform -skew-x-6">
                             CHEGA DE SEGREDOS. <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-400 to-primary animate-pulse">VOCE E VIP!</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 animate-pulse drop-shadow-[0_0_20px_rgba(6,182,212,0.5)]">VOCÊ É VIP!</span>
                         </h2>
 
                         <div className="bg-white/5 p-6 rounded-xl border border-white/10 max-w-lg mx-auto text-left space-y-3">
@@ -571,7 +586,7 @@ export default function ResultsPage() {
                                 </li>
                                 <li className="flex items-center gap-2 text-gray-300">
                                     <CheckCircle2 className="w-4 h-4 text-primary" />
-                                    Tutorial de Angulos para Fotos
+                                    Pontos de Atenção Desbloqueados
                                 </li>
                             </ul>
                         </div>
@@ -589,7 +604,7 @@ export default function ResultsPage() {
                         </Button>
                         <div className="flex flex-col items-center gap-1">
                             <span className="text-lg font-bold text-white">
-                                De <span className="text-red-500 line-through decoration-2">R$ 97,00</span> por <span className="text-primary text-2xl">R$ 19,90</span>
+                                De <span className="text-gray-500 line-through decoration-2">R$ 97,00</span> por <span className="text-primary text-2xl">R$ 19,90</span>
                             </span>
                             <span className="text-xs text-gray-500 font-mono">(Oferta de Lancamento por Tempo Limitado)</span>
                         </div>

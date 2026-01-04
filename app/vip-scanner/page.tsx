@@ -46,6 +46,7 @@ export default function VipScannerPage() {
     const [loginLoading, setLoginLoading] = useState(false);
     const [loginError, setLoginError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [termsAccepted, setTermsAccepted] = useState(false);
 
     // Estados para recuperação de acesso
     const [showRecovery, setShowRecovery] = useState(false);
@@ -473,10 +474,24 @@ export default function VipScannerPage() {
                                         onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                                     />
                                 </div>
+
+                                {/* Checkbox de Termos */}
+                                <label className="flex items-start gap-2 cursor-pointer group text-left">
+                                    <input
+                                        type="checkbox"
+                                        checked={termsAccepted}
+                                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                                        className="mt-1 w-4 h-4 rounded border-gray-600 bg-black/50 text-yellow-500 focus:ring-yellow-500/50 focus:ring-offset-0 cursor-pointer"
+                                    />
+                                    <span className="text-[10px] text-gray-400 leading-relaxed group-hover:text-gray-300 transition-colors">
+                                        Li e concordo com os <a href="/terms" target="_blank" className="text-yellow-400 hover:underline">Termos de Uso</a> e <a href="/privacy" target="_blank" className="text-yellow-400 hover:underline">Política de Privacidade</a>
+                                    </span>
+                                </label>
+
                                 <button
                                     onClick={handleLogin}
-                                    disabled={loginLoading}
-                                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center gap-2 group disabled:opacity-50"
+                                    disabled={loginLoading || !termsAccepted}
+                                    className="w-full py-4 bg-white/5 hover:bg-white/10 text-white text-sm font-bold rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     ACESSAR
                                     <ArrowUp className="w-4 h-4 rotate-90 group-hover:translate-x-1 transition-transform" />
@@ -596,7 +611,7 @@ export default function VipScannerPage() {
                                         </div>
                                     </div>
 
-                                    <div className="group relative border-2 border-dashed border-white/10 rounded-2xl bg-black/40 hover:bg-black/60 transition-all duration-300 hover:border-yellow-500/50 overflow-hidden min-h-[300px] flex flex-col">
+                                    <div className="group relative border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.1)] rounded-2xl bg-black/40 hover:bg-black/60 transition-all duration-300 hover:border-yellow-500/60 hover:shadow-[0_0_25px_rgba(234,179,8,0.3)] overflow-hidden min-h-[300px] flex flex-col">
                                         {faceImage ? (
                                             <div className="relative h-full flex-1 min-h-[300px]">
                                                 <img
@@ -846,7 +861,7 @@ export default function VipScannerPage() {
                         {/* === 3. RADAR CHART (Pontos Cegos) === */}
                         <section className="space-y-6">
                             <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-wider">
-                                ONDE ESTÃO SEUS <span className="text-yellow-400">PONTOS CEGOS</span>
+                                ONDE ESTÃO SEUS PONTOS CEGOS
                             </h2>
 
                             <div className="w-full bg-black/40 border border-white/5 rounded-3xl p-4 relative" style={{ minHeight: '350px' }}>
@@ -857,7 +872,7 @@ export default function VipScannerPage() {
                                             <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 'bold' }} />
                                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                                             <Radar name="Atual" dataKey="A" stroke="#ffffff" strokeWidth={2} fill="#ffffff" fillOpacity={0.1} />
-                                            <Radar name="Potencial" dataKey="B" stroke="#EAB308" strokeWidth={3} strokeDasharray="4 4" fill="#EAB308" fillOpacity={0.2} />
+                                            <Radar name="Potencial" dataKey="B" stroke="#FACC15" strokeWidth={3} strokeDasharray="4 4" fill="#FACC15" fillOpacity={0.2} />
                                         </RadarChart>
                                     </ResponsiveContainer>
                                 )}
@@ -868,8 +883,8 @@ export default function VipScannerPage() {
                                         <span className="text-gray-400">Atual</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-yellow-500/20 border border-yellow-500 border-dashed rounded-full" />
-                                        <span className="text-yellow-400 font-bold">Potencial</span>
+                                        <div className="w-3 h-3 bg-[#FACC15]/20 border border-[#FACC15] shadow-[0_0_10px_rgba(250,204,21,0.4)] rounded-full" />
+                                        <span className="text-[#FACC15] font-bold">Potencial</span>
                                     </div>
                                 </div>
                             </div>
