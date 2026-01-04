@@ -52,8 +52,18 @@ export default function Home() {
                 onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               />
               <label htmlFor="privacy" className="text-xs text-gray-400 cursor-pointer select-none">
-                Li e concordo com os <span className="text-primary">Termos de Uso</span> e <span className="text-primary">Política de Privacidade</span>.
+                <strong className="text-white">Declaro que tenho mais de 18 anos</strong> e concordo com os <Link href="/terms" className="text-primary hover:underline">Termos de Uso</Link> e <Link href="/privacy" className="text-primary hover:underline">Política de Privacidade</Link>.
               </label>
+            </div>
+
+            {/* Disclaimer Médico e Transparência de Preço */}
+            <div className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-4 max-w-md mb-4">
+              <p className="text-xs text-gray-400 text-center mb-2">
+                ⚕️ <strong className="text-gray-300">Não é diagnóstico médico:</strong> Análise de estilo e visagismo por IA.
+              </p>
+              <p className="text-xs text-primary text-center">
+                💰 <strong>Análise básica gratuita</strong> + Relatório completo VIP disponível (R$ 19,90)
+              </p>
             </div>
 
             <div className="flex flex-col items-center gap-4">
@@ -62,7 +72,7 @@ export default function Home() {
                   size="lg"
                   className="group text-lg h-16 px-8 transition-all duration-300"
                 >
-                  ESCANEAR AGORA
+                  ESCANEAR AGORA - GRÁTIS
                   <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
                 </Button>
               </Link>

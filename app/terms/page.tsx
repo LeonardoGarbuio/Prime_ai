@@ -36,6 +36,20 @@ export default function TermsPage() {
                                 </li>
                                 <li>Resultados dependem diretamente da qualidade, iluminação e ângulo da foto enviada pelo usuário.</li>
                             </ul>
+
+                            {/* CRÍTICO - Proteção Legal Contra Processos */}
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4 mt-4">
+                                <p className="text-yellow-300 text-sm mb-2">
+                                    <strong>⚖️ Subjetividade e Padrões Estéticos:</strong>
+                                </p>
+                                <p className="text-xs text-gray-400">
+                                    A metodologia utilizada baseia-se em <strong>parâmetros estéticos subjetivos</strong> e
+                                    algoritmos de aprendizado de máquina. <strong>Não existe um padrão universal de beleza</strong> e
+                                    os resultados <strong>não devem ser utilizados como diagnóstico psicológico ou determinação de valor pessoal</strong>.
+                                    As análises representam uma <strong>opinião algorítmica baseada em tendências estéticas</strong>,
+                                    não um fato científico absoluto. Diferentes culturas, épocas e indivíduos possuem percepções distintas de estética.
+                                </p>
+                            </div>
                         </div>
                     </section>
 

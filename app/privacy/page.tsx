@@ -1,9 +1,9 @@
+"use client";
+
 import React from 'react';
-import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo/metadata';
 import { AlertTriangle } from 'lucide-react';
 
-export const metadata: Metadata = generatePageMetadata({ page: 'privacy' });
+// Metadata será definida no layout pai
 
 export default function PrivacyPage() {
     return (
@@ -177,6 +177,55 @@ export default function PrivacyPage() {
                         <p className="mt-4 text-sm text-gray-400">
                             Como não armazenamos contas de usuário ou fotos, nosso sistema é
                             "Privacy by Design" (Privacidade desde a concepção).
+                        </p>
+                    </section>
+
+                    {/* Seção 7 - Publicidade e Rastreamento */}
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">7. Publicidade e Rastreamento (Pixels)</h2>
+                        <p className="mb-4">
+                            Para fins de marketing e análise de comportamento, utilizamos pixels de rastreamento
+                            de plataformas publicitárias:
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 mb-4">
+                            <li><strong>Meta Pixel (Facebook/Instagram)</strong> - Remarketing e medição de conversões</li>
+                            <li><strong>Google Ads</strong> - Publicidade segmentada</li>
+                            <li><strong>TikTok Pixel</strong> - Campanhas publicitárias (se aplicável)</li>
+                        </ul>
+                        <p className="text-sm text-gray-400">
+                            Esses pixels coletam informações de navegação (páginas visitadas, cliques) e podem
+                            compartilhar seu IP e comportamento com as respectivas plataformas para exibição
+                            de anúncios relevantes.
+                        </p>
+                    </section>
+
+                    {/* Seção 8 - Direito ao Esquecimento (Bot\u00e3o de Limpeza) */}
+                    <section>
+                        <h2 className="text-2xl font-semibold text-white mb-4">8. Direito ao Esquecimento e Dados Locais</h2>
+                        <p className="mb-4">
+                            Conforme LGPD Art. 18º, você tem direito de solicitar a exclusão de seus dados.
+                            Como não armazenamos fotos ou dados pessoais em servidor, o único dado que pode
+                            estar armazenado é o fingerprint facial no seu navegador (localStorage).
+                        </p>
+                        <p className="mb-4 text-sm text-gray-400">
+                            Para exercer seu direito de exclusão imediatamente, clique no botão abaixo:
+                        </p>
+                        <button
+                            onClick={() => {
+                                try {
+                                    localStorage.clear();
+                                    alert('✅ Todos os seus dados locais foram excluídos com sucesso!');
+                                } catch (e) {
+                                    alert('⚠️ Erro ao limpar dados. Tente limpar o cache do navegador manualmente.');
+                                }
+                            }}
+                            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
+                        >
+                            🗑️ Limpar Todos os Meus Dados Locais
+                        </button>
+                        <p className="mt-3 text-xs text-gray-500">
+                            Isso irá apagar permanentemente o fingerprint facial e qualquer outra informação
+                            armazenada localmente no seu navegador. Esta ação é irreversível.
                         </p>
                     </section>
                 </div>
