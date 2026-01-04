@@ -1,4 +1,8 @@
 import React from 'react';
+import { Metadata } from 'next';
+import { generatePageMetadata } from '@/lib/seo/metadata';
+
+export const metadata: Metadata = generatePageMetadata({ page: 'terms' });
 
 export default function TermsPage() {
     return (

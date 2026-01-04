@@ -1,0 +1,32 @@
+# Prime AI - Robots.txt
+
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Block API routes from indexing
+Disallow: /api/
+
+# Block analyzing pages (temporary analysis pages)
+Disallow: /analyzing/
+
+# Block checkout process
+Disallow: /checkout/
+
+# Sitemap location
+Sitemap: https://primeai.app/sitemap.xml
+
+# Special rules for Google
+User-agent: Googlebot
+Allow: /
+
+# Special rules for Bing
+User-agent: Bingbot
+Allow: /
+
+# Block bad bots (optional)
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

@@ -1,5 +1,5 @@
 // faceLandmarker.ts - VERSÃO CORRIGIDA V4
-//Criador: Leonardo Garbuio Cavalheiro
+// Prime AI - Face Analysis Utilities
 //Data: 29/12/2025
 //
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
