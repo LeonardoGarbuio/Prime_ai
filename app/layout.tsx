@@ -3,7 +3,6 @@ import { Outfit, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import TrackingPixels from "@/components/TrackingPixels";
 import "./globals.css";
-import { Footer } from "@/components/layout/Footer";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -112,7 +111,6 @@ export default function RootLayout({
       >
         <TrackingPixels />
         {children}
-        <Footer />
         <Analytics />
       </body>
     </html>
