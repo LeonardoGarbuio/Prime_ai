@@ -3,6 +3,7 @@
 //Data: 29/12/2025
 //
 import { FilesetResolver, FaceLandmarker } from "@mediapipe/tasks-vision";
+import { calculateFaceMetrics as calculateFingerprintMetrics, faceFingerprintCache } from "./faceFingerprint";
 
 let faceLandmarker: FaceLandmarker | null = null;
 
@@ -272,6 +273,56 @@ export function calculateBeautyScore(landmarks: Ponto[]): number {
 }
 
 export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FACE FINGERPRINT SYSTEM - Garantir consistência de formato
+    // Verifica cache local para evitar mudança de formato com ângulo diferente
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    const fingerprintMetrics = calculateFingerprintMetrics(landmarks as any); // Ponto é compatível com NormalizedLandmark
+    const cachedFingerprint = faceFingerprintCache.findSimilar(fingerprintMetrics);
+
+    if (cachedFingerprint) {
+        // ✅ Mesma pessoa detectada! Usar formato salvo
+        console.log(`🎯 ══════════════════════════════════════════════════════════`);
+        console.log(`🎯 FACE FINGERPRINT: Pessoa reconhecida!`);
+        console.log(`🎯 Formato salvo: ${cachedFingerprint.faceShape}`);
+        console.log(`🎯 Análises anteriores: ${cachedFingerprint.analysisCount}`);
+        console.log(`🎯 ══════════════════════════════════════════════════════════`);
+
+        // Atualizar timestamp no cache
+        faceFingerprintCache.save(fingerprintMetrics, cachedFingerprint.faceShape);
+
+        // Calcular medidas para retornar resultado completo
+        const m = calcularMedidas(landmarks);
+
+        return {
+            formato: cachedFingerprint.faceShape as FormatoRosto,
+            confianca: 100, // 100% pois é baseado em cache
+            segundaOpcao: cachedFingerprint.faceShape as FormatoRosto,
+            confiancaSegunda: 100,
+            descricao: DESCRICOES[cachedFingerprint.faceShape as FormatoRosto],
+            medidas: m,
+            debug: {
+                regras: [`✅ Formato recuperado do cache (fingerprint match)`],
+                pontos: {
+                    OVAL: 0, REDONDO: 0, QUADRADO: 0, RETANGULAR: 0,
+                    OBLONGO: 0, CORACAO: 0, TRIANGULAR_INVERTIDO: 0,
+                    TRIANGULAR: 0, DIAMANTE: 0,
+                    [cachedFingerprint.faceShape]: 100
+                } as Record<FormatoRosto, number>
+            }
+        };
+    }
+
+    console.log(`🆕 ══════════════════════════════════════════════════════════`);
+    console.log(`🆕 FACE FINGERPRINT: Nova pessoa detectada`);
+    console.log(`🆕 Calculando formato e salvando no cache...`);
+    console.log(`🆕 ══════════════════════════════════════════════════════════`);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CÁLCULO NORMAL DE FORMATO (para nova pessoa)
+    // ═══════════════════════════════════════════════════════════════════════════
+
     const m = calcularMedidas(landmarks);
     const regras: string[] = [];
 
@@ -942,6 +993,13 @@ export function classificarFormatoRosto(landmarks: Ponto[]): Resultado {
     console.log(`📊 Confiança: ${safeFixed(confianca, 0)}%`);
     console.log(`🥈 Segunda: ${segundo} (${safeFixed(confiancaSegunda, 0)}%)`);
     console.log("═══════════════════════════════════════════════════════════════\n");
+
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SALVAR NO CACHE DE FINGERPRINT (para nova pessoa)
+    // ═══════════════════════════════════════════════════════════════════════════
+    faceFingerprintCache.save(fingerprintMetrics, melhor);
+    console.log(`💾 Formato "${melhor}" salvo no cache de fingerprint`);
 
     return {
         formato: melhor,
