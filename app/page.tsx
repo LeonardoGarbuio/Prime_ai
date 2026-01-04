@@ -52,18 +52,8 @@ export default function Home() {
                 onChange={(e) => setAcceptedPrivacy(e.target.checked)}
               />
               <label htmlFor="privacy" className="text-xs text-gray-400 cursor-pointer select-none">
-                <strong className="text-white">Declaro que tenho mais de 18 anos</strong> e concordo com os <Link href="/terms" className="text-primary hover:underline">Termos de Uso</Link> e <Link href="/privacy" className="text-primary hover:underline">Política de Privacidade</Link>.
+                Declaro que tenho mais de 18 anos e concordo com os <Link href="/terms" className="text-primary hover:underline">Termos de Uso</Link> e <Link href="/privacy" className="text-primary hover:underline">Política de Privacidade</Link>.
               </label>
-            </div>
-
-            {/* Disclaimer Médico e Transparência de Preço */}
-            <div className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-4 max-w-md mb-4">
-              <p className="text-xs text-gray-400 text-center mb-2">
-                ⚕️ <strong className="text-gray-300">Não é diagnóstico médico:</strong> Análise de estilo e visagismo por IA.
-              </p>
-              <p className="text-xs text-primary text-center">
-                💰 <strong>Análise básica gratuita</strong> + Relatório completo VIP disponível (R$ 19,90)
-              </p>
             </div>
 
             <div className="flex flex-col items-center gap-4">
@@ -76,6 +66,8 @@ export default function Home() {
                   <ScanLine className="w-5 h-5 ml-2 group-hover:animate-pulse" />
                 </Button>
               </Link>
+
+
 
               {/* Modal de Aviso */}
               {showTermsWarning && (
@@ -118,6 +110,11 @@ export default function Home() {
           <p className="text-xs text-gray-600 font-mono">
             ANÁLISE CRIPTOGRAFADA • 100% PRIVADO • RESULTADO EM 30S <br />
             *Resultados baseados em geometria. Podem variar conforme iluminação.
+          </p>
+
+          {/* Disclaimer Legal */}
+          <p className="text-[10px] text-gray-600 mt-2 font-medium">
+            Não é diagnóstico médico - Análise de estilo por IA • Básica gratuita + VIP R$ 19,90
           </p>
         </div>
 

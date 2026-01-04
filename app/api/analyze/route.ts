@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit, getClientIP } from "@/lib/security";
 
 // 🔧 HELPER: Extrai JSON de texto (incluindo blocos Markdown)
 function extractJSON(text: string): string | null {
@@ -20,6 +21,18 @@ function extractJSON(text: string): string | null {
 }
 
 export async function POST(req: Request) {
+    // 🛡️ PROTEÇÃO ANTI-DDOS: Rate Limiting (10 req/min por IP)
+    const clientIP = getClientIP(req);
+    const rateLimit = checkRateLimit(clientIP, 10, 60000);
+
+    if (!rateLimit.allowed) {
+        console.warn(`⚠️ Rate limit - IP: ${clientIP}`);
+        return NextResponse.json(
+            { error: "Muitas requisições. Aguarde 1 minuto." },
+            { status: 429, headers: { 'Retry-After': '60' } }
+        );
+    }
+
     // --- SUA CHAVE ---
     const apiKey = process.env.GOOGLE_API_KEY;
 

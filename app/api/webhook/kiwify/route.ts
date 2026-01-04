@@ -116,7 +116,7 @@ export async function POST(req: Request) {
         // ==================== IDEMPOTÊNCIA ====================
         const eventTimestamp = body.created_at || body.occurred_at || new Date().toISOString();
         const webhookKey = `${orderId}-${evento}-${eventTimestamp}`;
-        if (isWebhookAlreadyProcessed(webhookKey)) {
+        if (await isWebhookAlreadyProcessed(webhookKey)) {
             console.log(`ℹ️ Webhook já processado: ${webhookKey}`);
             return NextResponse.json({
                 success: true,
@@ -186,7 +186,7 @@ export async function POST(req: Request) {
 
         // Marcar como processado apenas se sucesso
         if (result.status === 200) {
-            markWebhookAsProcessed(webhookKey);
+            await markWebhookAsProcessed(webhookKey, orderId, eventoNormalizado || 'unknown', clientIP);
         }
 
         return result;

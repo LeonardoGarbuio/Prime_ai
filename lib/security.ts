@@ -96,37 +96,100 @@ function cleanupRateLimitStore() {
 
 // ==================== IDEMPOTENCY ====================
 
-// Armazena webhooks já processados (Order IDs)
+// Armazena webhooks já processados (FALLBACK - memória)
 const processedWebhooks = new Map<string, number>();
 
 /**
  * Verifica se um webhook já foi processado (idempotência)
- * @param orderId - ID único da ordem/transação
+ * Tenta Supabase primeiro, fallback para memória se DB não disponível
+ * @param webhookKey - Chave única do webhook
  * @returns boolean - true se já processado
  */
-export function isWebhookAlreadyProcessed(orderId: string): boolean {
-    if (!orderId) return false;
+export async function isWebhookAlreadyProcessed(webhookKey: string): Promise<boolean> {
+    if (!webhookKey) return false;
 
-    const processedAt = processedWebhooks.get(orderId);
+    try {
+        // Tenta Supabase primeiro (SE tabela existir)
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        );
+
+        const { data, error } = await supabase
+            .from('processed_webhooks')
+            .select('id')
+            .eq('webhook_key', webhookKey)
+            .single();
+
+        if (!error && data) {
+            console.log(`✅ Webhook já processado (Supabase): ${webhookKey}`);
+            return true;
+        }
+
+        // Se tabela não existe, usa fallback
+        if (error?.code === '42P01') {
+            console.warn('⚠️ Tabela processed_webhooks não existe. Execute o SQL no Supabase!');
+        }
+    } catch (dbError) {
+        console.warn('⚠️ Supabase indisponível, usando memória:', dbError);
+    }
+
+    // FALLBACK: Memória (funciona mesmo se Supabase falhar)
+    const processedAt = processedWebhooks.get(webhookKey);
     if (processedAt) {
-        // Manter registros por 24h
         if (Date.now() - processedAt < 24 * 60 * 60 * 1000) {
             return true;
         }
-        processedWebhooks.delete(orderId);
+        processedWebhooks.delete(webhookKey);
     }
     return false;
 }
 
 /**
- * Marca webhook como processado
- * @param orderId - ID único da ordem/transação
+ * Marca webhook como processado (Supabase + memória)
+ * @param webhookKey - Chave única
+ * @param orderId - ID da ordem
+ * @param eventType - Tipo de evento
+ * @param ipAddress - IP de origem
  */
-export function markWebhookAsProcessed(orderId: string): void {
-    if (!orderId) return;
-    processedWebhooks.set(orderId, Date.now());
+export async function markWebhookAsProcessed(
+    webhookKey: string,
+    orderId: string,
+    eventType: string,
+    ipAddress: string
+): Promise<void> {
+    if (!webhookKey) return;
 
-    // Limpeza periódica
+    // Marca em memória (sempre)
+    processedWebhooks.set(webhookKey, Date.now());
+
+    try {
+        // Tenta salvar no Supabase
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        );
+
+        await supabase
+            .from('processed_webhooks')
+            .insert({
+                webhook_key: webhookKey,
+                order_id: orderId,
+                event_type: eventType,
+                ip_address: ipAddress
+            })
+            .throwOnError();
+
+        console.log(`✅ Webhook marcado no Supabase: ${webhookKey}`);
+    } catch (dbError: any) {
+        if (dbError?.code !== '42P01') { // Ignora erro de tabela não existe
+            console.warn('⚠️ Erro ao salvar webhook no Supabase:', dbError.message);
+        }
+    }
+
+    // Limpeza periódica de memória
     if (processedWebhooks.size > 1000) {
         cleanupProcessedWebhooks();
     }

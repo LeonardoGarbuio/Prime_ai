@@ -2,6 +2,26 @@
 // Sistema de impressão digital facial para consistência de formato de rosto
 
 import { NormalizedLandmark } from "@mediapipe/tasks-vision";
+import CryptoJS from 'crypto-js';
+
+// 🔐 Chave de criptografia (em produção usar .env)
+const ENCRYPTION_KEY = process.env.NEXT_PUBLIC_FINGERPRINT_KEY || 'prime-ai-face-2026-secure';
+
+// 🔐 Funções de criptografia AES-256
+function encryptData(data: any): string {
+    const jsonString = JSON.stringify(data);
+    return CryptoJS.AES.encrypt(jsonString, ENCRYPTION_KEY).toString();
+}
+
+function decryptData(encrypted: string): any {
+    try {
+        const bytes = CryptoJS.AES.decrypt(encrypted, ENCRYPTION_KEY);
+        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+        return JSON.parse(decrypted);
+    } catch {
+        return null; // Corrupted data
+    }
+}
 
 // Tipos
 export interface FaceMetrics {
@@ -147,25 +167,34 @@ export class FaceFingerprintCache {
     private expiryDays = EXPIRY_DAYS;
 
     /**
-     * Carrega cache do localStorage
+     * Carrega cache do localStorage (com descriptografia)
      */
     load(): FaceCache {
         try {
-            const data = localStorage.getItem(this.storageKey);
-            if (!data) {
-                return { fingerprints: [], version: '1.0' };
-            }
-            const cache = JSON.parse(data) as FaceCache;
-
-            // Migração de versão se necessário
-            if (!cache.version) {
-                cache.version = '1.0';
+            const encryptedData = localStorage.getItem(this.storageKey);
+            if (!encryptedData) {
+                return { fingerprints: [], version: '2.0' }; // v2.0 = criptografado
             }
 
-            return cache;
+            // Tenta descriptografar (v2.0)
+            const decryptedData = decryptData(encryptedData);
+            if (decryptedData) {
+                console.log('🔐 Cache descriptografado com sucesso');
+                return decryptedData as FaceCache;
+            }
+
+            // Fallback: dados antigos sem criptografia (v1.0)
+            try {
+                const cache = JSON.parse(encryptedData) as FaceCache;
+                console.log('⚠️ Migrando cache v1.0 para v2.0 criptografado');
+                cache.version = '2.0';
+                return cache;
+            } catch {
+                return { fingerprints: [], version: '2.0' };
+            }
         } catch (error) {
-            console.error('Erro ao carregar cache de fingerprints:', error);
-            return { fingerprints: [], version: '1.0' };
+            console.error('Erro ao carregar cache:', error);
+            return { fingerprints: [], version: '2.0' };
         }
     }
 
@@ -232,8 +261,10 @@ export class FaceFingerprintCache {
             // Limpar cache de entradas antigas/excedentes
             this.cleanup(cache);
 
-            // Salvar
-            localStorage.setItem(this.storageKey, JSON.stringify(cache));
+            // Salvar (CRIPTOGRAFADO)
+            const encryptedCache = encryptData(cache);
+            localStorage.setItem(this.storageKey, encryptedCache);
+            console.log('🔒 Cache salvo criptografado (AES-256)');
         } catch (error) {
             console.error('Erro ao salvar fingerprint:', error);
         }
