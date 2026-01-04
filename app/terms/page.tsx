@@ -48,9 +48,28 @@ export default function TermsPage() {
                         </p>
                     </section>
 
-                    {/* SEÇÃO 4 - REEMBOLSO */}
+                    {/* SEÇÃO 4 - PROCESSADORES DE DADOS */}
                     <section>
-                        <h2 className="text-xl font-semibold text-white mb-3">4. Reembolso e Cancelamento</h2>
+                        <h2 className="text-xl font-semibold text-white mb-3">4. Processadores de Dados e Sub-processadores</h2>
+                        <p className="leading-relaxed mb-3">
+                            Para execução do serviço de análise facial com Inteligência Artificial, utilizamos
+                            processadores de dados terceiros que agem sob nosso controle e seguem padrões
+                            de segurança compatíveis com LGPD e GDPR:
+                        </p>
+                        <ul className="list-disc pl-5 space-y-2 text-gray-400">
+                            <li><strong>Google Cloud (Gemini API)</strong> - Processamento principal da análise via IA</li>
+                            <li><strong>Groq</strong> - Processamento alternativo (fallback)</li>
+                        </ul>
+                        <p className="leading-relaxed mt-3 text-sm text-gray-400">
+                            Todos os sub-processadores operam sob contrato de DPA (Data Processing Agreement)
+                            e descartam as imagens imediatamente após o processamento, conforme descrito em
+                            nossa <a href="/privacy" className="text-primary hover:underline">Política de Privacidade</a>.
+                        </p>
+                    </section>
+
+                    {/* SEÇÃO 5 - REEMBOLSO */}
+                    <section>
+                        <h2 className="text-xl font-semibold text-white mb-3">5. Reembolso e Cancelamento</h2>
                         <p className="leading-relaxed">
                             Em conformidade com o Art. 49 do Código de Defesa do Consumidor (CDC), oferecemos garantia incondicional de 7 dias.
                             Se desejar o reembolso por qualquer motivo, entre em contato com nosso suporte oficial dentro deste prazo para estorno integral.
