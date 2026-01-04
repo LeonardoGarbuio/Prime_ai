@@ -8,5 +8,7 @@ export {
     generateSoftwareApplicationSchema,
     generateFAQSchema,
     generateBreadcrumbSchema,
+    generateHowToSchema,
+    generateAggregateRatingSchema,
     createJsonLdScript
 } from './schema';

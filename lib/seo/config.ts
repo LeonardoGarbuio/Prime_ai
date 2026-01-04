@@ -6,17 +6,71 @@ export const SEO_CONFIG = {
     defaultDescription: "Descubra o quão longe você está do seu Prime. Análise facial avançada com inteligência artificial que revela sua verdadeira pontuação estética.",
     locale: "pt_BR",
     keywords: [
+        // Keywords Primárias (Alto Volume)
         "análise facial",
         "análise facial ia",
-        "biometria facial",
-        "inteligência artificial",
-        "beleza",
-        "simetria facial",
-        "prime",
+        "análise facial grátis",
+        "análise facial online",
         "scanner facial",
-        "análise estética",
+        "scanner facial online",
+        "scanner de rosto",
+        "scanner facial grátis",
+        "ia de beleza",
+        "inteligência artificial beleza",
+        "ai facial analysis",
+
+        // Termos Específicos do Nicho
+        "biometria facial",
+        "biometria facial online",
+        "simetria facial",
+        "teste simetria facial",
+        "proporção áurea facial",
+        "golden ratio face",
         "formato de rosto",
-        "avaliação facial"
+        "teste formato rosto",
+        "descobrir formato de rosto",
+        "calculadora rosto",
+        "calculadora de beleza",
+        "avaliação facial",
+        "nota facial",
+        "face rating",
+        "face rating brasil",
+        "beauty score",
+
+        // Long-Tail Keywords (Alta Conversão)
+        "como analisar meu rosto",
+        "como analisar meu rosto com ia",
+        "descobrir meu formato de rosto",
+        "teste de beleza facial grátis",
+        "ia que analisa rosto",
+        "ia que dá nota para rosto",
+        "melhor site análise facial",
+        "análise facial biométrica grátis",
+        "qual minha nota de beleza",
+
+        // Termos Técnicos
+        "mediapipe face mesh",
+        "mediapipe análise facial",
+        "google face analysis",
+        "ai facial recognition",
+        "deep learning face",
+        "computer vision face",
+
+        // Comparações e Qualificadores
+        "melhor análise facial",
+        "análise facial precisa",
+        "scanner facial confiável",
+        "análise facial brasileira",
+        "prime ai",
+        "prime facial",
+
+        // Relacionados a Estética
+        "visagismo",
+        "visagismo online",
+        "harmonia facial",
+        "estética facial",
+        "terços faciais",
+        "índice facial"
     ],
     social: {
         twitter: "@primeai",
@@ -30,15 +84,15 @@ export const SEO_CONFIG = {
 // Page-specific metadata configurations
 export const PAGE_METADATA = {
     home: {
-        title: "Prime AI - Análise Biométrica Facial com IA",
-        description: "Descubra o quão longe você está do seu Prime. Análise facial avançada com inteligência artificial que revela sua verdadeira pontuação estética.",
-        keywords: ["análise facial grátis", "ia facial", "prime ai", "análise de beleza"],
+        title: "Análise Facial com IA Grátis | Prime AI - Scanner Facial Online",
+        description: "Análise Facial com IA 100% Grátis ✓ Descubra sua nota de beleza, formato de rosto e simetria facial em 30s ✓ Scanner facial online com tecnologia Google MediaPipe ✓ Teste agora!",
+        keywords: ["análise facial grátis", "ia facial", "prime ai", "análise de beleza", "scanner facial grátis"],
         canonical: "/"
     },
     scan: {
-        title: "Análise Facial Gratuita | Prime AI",
-        description: "Faça sua análise facial gratuita agora. Descubra sua pontuação Prime, formato de rosto e recomendações personalizadas com IA avançada.",
-        keywords: ["scan facial", "análise grátis", "scanner de rosto"],
+        title: "Scanner Facial Grátis | Análise de Rosto com IA",
+        description: "Scanner Facial Grátis ✓ Faça sua análise facial com IA agora ✓ Descubra formato do rosto, simetria e proporção áurea ✓ Resultados em tempo real ✓ 100% privado e seguro",
+        keywords: ["scan facial", "análise grátis", "scanner de rosto", "teste facial online"],
         canonical: "/scan"
     },
     camera: {
@@ -60,9 +114,9 @@ export const PAGE_METADATA = {
         canonical: "/vip-scanner"
     },
     comoFunciona: {
-        title: "Como Funciona | Prime AI - Tecnologia de Análise Facial",
-        description: "Entenda como nossa IA analisa seu rosto com tecnologia de ponta em biometria facial e machine learning.",
-        keywords: ["como funciona ia facial", "tecnologia prime ai"],
+        title: "Como Funciona a Análise Facial com IA? | Tecnologia MediaPipe",
+        description: "Como Funciona a Análise Facial com IA? ✓ Tecnologia MediaPipe mapeia 468 pontos faciais ✓ Cálculo científico de simetria e proporção áurea ✓ Entenda a ciência por trás da IA",
+        keywords: ["como funciona ia facial", "tecnologia prime ai", "mediapipe face mesh", "análise facial científica"],
         canonical: "/como-funciona"
     },
     terms: {
@@ -78,6 +132,12 @@ export const PAGE_METADATA = {
         keywords: ["privacidade", "lgpd", "proteção de dados"],
         canonical: "/privacy",
         robots: "noindex, follow"
+    },
+    faq: {
+        title: "Perguntas Frequentes (FAQ) | Prime AI - Análise Facial com IA",
+        description: "Tire todas suas dúvidas sobre análise facial com IA ✓ Como funciona ✓ É grátis? ✓ Segurança ✓ Precisão ✓ Diferencial Prime AI ✓ Respostas completas",
+        keywords: ["faq prime ai", "dúvidas análise facial", "como funciona scanner facial", "ia facial segura"],
+        canonical: "/faq"
     },
     obrigado: {
         title: "Obrigado pela Compra | Prime AI VIP",

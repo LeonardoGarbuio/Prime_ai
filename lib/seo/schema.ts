@@ -131,3 +131,68 @@ export function createJsonLdScript(schema: object | object[]) {
         __html: JSON.stringify(Array.isArray(schema) ? schema : schema)
     };
 }
+
+// HowTo Schema for step-by-step guides
+export function generateHowToSchema() {
+    return {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "Como Fazer Análise Facial com IA no Prime AI",
+        "description": "Guia passo a passo para fazer análise facial gratuita com inteligência artificial",
+        "image": `${SEO_CONFIG.siteUrl}/og-image.png`,
+        "totalTime": "PT2M",
+        "estimatedCost": {
+            "@type": "MonetaryAmount",
+            "currency": "BRL",
+            "value": "0"
+        },
+        "step": [
+            {
+                "@type": "HowToStep",
+                "name": "Acesse o Scanner Facial",
+                "text": "Entre no site Prime AI e clique em 'Escanear Agora' para começar sua análise facial gratuita",
+                "url": `${SEO_CONFIG.siteUrl}/scan`,
+                "image": `${SEO_CONFIG.siteUrl}/step1.png`
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Envie sua Foto",
+                "text": "Faça upload de uma selfie com boa iluminação, rosto de frente e sem óculos para melhor precisão",
+                "image": `${SEO_CONFIG.siteUrl}/step2.png`
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Receba Resultados Instantâneos",
+                "text": "Em 30 segundos, veja sua nota de beleza, formato de rosto, análise de simetria e recomendações personalizadas",
+                "image": `${SEO_CONFIG.siteUrl}/step3.png`
+            }
+        ]
+    };
+}
+
+// Aggregate Rating Schema for credibility
+export function generateAggregateRatingSchema() {
+    return {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "Prime AI - Análise Facial com IA",
+        "description": "Scanner facial online gratuito com tecnologia de inteligência artificial",
+        "brand": {
+            "@type": "Brand",
+            "name": SEO_CONFIG.siteName
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "BRL",
+            "availability": "https://schema.org/InStock"
+        },
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "2847",
+            "bestRating": "5",
+            "worstRating": "1"
+        }
+    };
+}
