@@ -629,17 +629,7 @@ export default function ResultsPage() {
                 </div>
             </div>
 
-            {/* Disclaimer Legal Fixo - CRÍTICO para LGPD */}
-            <div className="fixed bottom-0 left-0 right-0 bg-yellow-500/10 border-t border-yellow-500/30 backdrop-blur-sm z-50 py-3 px-4">
-                <div className="max-w-6xl mx-auto flex items-center gap-2 text-xs">
-                    <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
-                    <p className="text-yellow-300 text-center flex-1">
-                        <strong>Aviso Legal:</strong> Resultados gerados por Inteligência Artificial para fins de
-                        estilo e visagismo. Não substitui opinião médica, dermatológica ou de profissional de saúde.
-                        Consulte um especialista para procedimentos estéticos ou dermatológicos.
-                    </p>
-                </div>
-            </div>
+
 
             <Footer />
         </main >
