@@ -159,7 +159,7 @@ export default function ResultsPage() {
     }, [result, hasSaved, checkAndUnlockBadges, badges]);
 
     // Link único do produto Prime AI VIP
-    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/Smq4FoG";
+    const VIP_CHECKOUT_LINK = "https://pay.kiwify.com.br/UBt2N8y";
 
     const handleCheckout = () => {
         window.location.href = VIP_CHECKOUT_LINK;
@@ -458,41 +458,85 @@ export default function ResultsPage() {
                             onClick={() => setExpandedSection(expandedSection === 'positives' ? null : 'positives')}
                             className="w-full p-4 flex items-center justify-between"
                         >
-                            <span className="text-white font-medium">Positivos</span>
-                            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${expandedSection === 'positives' ? 'rotate-180' : ''}`} />
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="w-4 h-4 text-[#39FF14]" />
+                                <span className="text-white font-medium">Pontos Fortes</span>
+                            </div>
+                            <ChevronDown className={`w-5 h-5 text-[#39FF14] transition-transform ${expandedSection === 'positives' ? 'rotate-180' : ''}`} />
                         </button>
                         {expandedSection === 'positives' && (
-                            <div className="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+                            <div className="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">
                                 {/* Pontos fortes da análise da IA */}
                                 {result.rosto?.pontos_fortes?.length > 0 ? (
                                     result.rosto.pontos_fortes.map((ponto: string, i: number) => (
-                                        <div key={i} className="flex items-start gap-2">
+                                        <div key={i} className="flex items-start gap-3">
                                             <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">{ponto}</span>
+                                            <span className="text-gray-300 text-sm leading-relaxed">{ponto}</span>
                                         </div>
                                     ))
                                 ) : (
                                     <>
-                                        <div className="flex items-start gap-2">
+                                        {/* Ponto 1: Formato do Rosto */}
+                                        <div className="flex items-start gap-3">
                                             <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">Estrutura óssea bem definida para formato {formatFaceShape(faceShape)}</span>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">
-                                                {symmetryScore >= 80
-                                                    ? `Excelente simetria facial (${symmetryScore}%) - acima da média`
-                                                    : `Boa simetria facial (${symmetryScore}%) - dentro da norma`}
+                                            <span className="text-gray-300 text-sm leading-relaxed">
+                                                <strong className="text-white">Formato {formatFaceShape(faceShape)}</strong> — estrutura óssea bem definida com proporções harmônicas
                                             </span>
                                         </div>
-                                        <div className="flex items-start gap-2">
+
+                                        {/* Ponto 2: Simetria */}
+                                        <div className="flex items-start gap-3">
                                             <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
-                                            <span className="text-gray-300 text-sm">
-                                                {parseFloat(gap) > 1
-                                                    ? `Alto potencial de evolução com visagismo (+${gap} pontos possíveis)`
-                                                    : `Já próximo do seu potencial máximo - foco em manutenção`}
+                                            <span className="text-gray-300 text-sm leading-relaxed">
+                                                <strong className="text-white">Simetria Facial {symmetryScore}%</strong> — {symmetryScore >= 85
+                                                    ? 'excelente equilíbrio entre os lados do rosto, acima da média populacional'
+                                                    : symmetryScore >= 75
+                                                        ? 'bom equilíbrio facial, dentro da faixa considerada atrativa'
+                                                        : 'simetria dentro da normalidade, com espaço para otimização via visagismo'}
                                             </span>
                                         </div>
+
+                                        {/* Ponto 3: Estrutura Óssea (baseado no radar) */}
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm leading-relaxed">
+                                                <strong className="text-white">Estrutura Óssea {result.grafico_radar?.estrutura_ossea || 75}%</strong> — {(result.grafico_radar?.estrutura_ossea || 75) >= 80
+                                                    ? 'ossatura marcante que transmite confiança e presença'
+                                                    : 'estrutura equilibrada que permite versatilidade nos estilos'}
+                                            </span>
+                                        </div>
+
+                                        {/* Ponto 4: Proporção Áurea */}
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm leading-relaxed">
+                                                <strong className="text-white">Proporção Áurea {result.grafico_radar?.proporcao_aurea || 70}%</strong> — {(result.grafico_radar?.proporcao_aurea || 70) >= 75
+                                                    ? 'alinhamento natural com os padrões clássicos de beleza'
+                                                    : 'características únicas que fogem do padrão comum'}
+                                            </span>
+                                        </div>
+
+                                        {/* Ponto 5: Potencial */}
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                            <span className="text-gray-300 text-sm leading-relaxed">
+                                                <strong className="text-white">Potencial de Evolução</strong> — {parseFloat(gap) > 1.5
+                                                    ? `alta margem para melhoria (+${gap} pontos) com técnicas de visagismo e styling`
+                                                    : parseFloat(gap) > 0.8
+                                                        ? `oportunidade de crescimento (+${gap} pontos) com ajustes estratégicos`
+                                                        : 'já próximo do potencial máximo, foco em manutenção e consistência'}
+                                            </span>
+                                        </div>
+
+                                        {/* Ponto 6: Arquétipo (se disponível) */}
+                                        {result.analise_geral?.arquetipo && (
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-2 h-2 rounded-full bg-[#39FF14] mt-1.5 flex-shrink-0" />
+                                                <span className="text-gray-300 text-sm leading-relaxed">
+                                                    <strong className="text-white">Arquétipo {result.analise_geral.arquetipo}</strong> — presença natural que pode ser potencializada com o estilo certo
+                                                </span>
+                                            </div>
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -500,63 +544,79 @@ export default function ResultsPage() {
                     </div>
 
                     {/* Pontos de Atencao - Locked */}
-                    <div className="bg-[#1C1C1E] rounded-2xl border border-white/5 overflow-hidden opacity-70">
+                    <div className="bg-[#1C1C1E]/50 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                         <button
                             onClick={() => setExpandedSection(expandedSection === 'negatives' ? null : 'negatives')}
-                            className="w-full p-4 flex items-center justify-between"
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                         >
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-gray-600" />
-                                <span className="text-gray-400 font-medium">Pontos de Atencao</span>
-                            </div>
+                            <span className="text-gray-400 font-medium">Pontos de Atenção</span>
                             <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform ${expandedSection === 'negatives' ? 'rotate-180' : ''}`} />
                         </button>
                         {expandedSection === 'negatives' && (
-                            <div className="px-4 pb-4 border-t border-white/5 pt-3">
-                                <div className="text-center py-2">
-                                    <span className="text-gray-500 text-sm">Conteudo bloqueado - Acesso VIP</span>
+                            <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                                <div className="blur-[6px] select-none pointer-events-none space-y-3 mb-4">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Assimetria detectada na região temporal esquerda...</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Proporção áurea pode ser melhorada em 12%...</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Ângulo mandibular sugere ajuste de contorno...</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {/* Corte de Cabelo - Locked */}
-                    <div className="bg-[#1C1C1E] rounded-2xl border border-white/5 overflow-hidden opacity-70">
+                    <div className="bg-[#1C1C1E]/50 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                         <button
                             onClick={() => setExpandedSection(expandedSection === 'haircut' ? null : 'haircut')}
-                            className="w-full p-4 flex items-center justify-between"
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                         >
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-gray-600" />
-                                <span className="text-gray-400 font-medium">Corte de Cabelo Ideal</span>
-                            </div>
+                            <span className="text-gray-400 font-medium">Corte de Cabelo Ideal</span>
                             <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform ${expandedSection === 'haircut' ? 'rotate-180' : ''}`} />
                         </button>
                         {expandedSection === 'haircut' && (
-                            <div className="px-4 pb-4 border-t border-white/5 pt-3">
-                                <div className="text-center py-2">
-                                    <span className="text-gray-500 text-sm">Conteudo bloqueado - Acesso VIP</span>
+                            <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                                <div className="blur-[6px] select-none pointer-events-none space-y-3 mb-4">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Corte degradê médio para valorizar maxilar...</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-yellow-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Produto para volume na região frontal...</span>
+                                    </div>
                                 </div>
                             </div>
                         )}
                     </div>
 
                     {/* Sugestoes de Estilo - Locked */}
-                    <div className="bg-[#1C1C1E] rounded-2xl border border-white/5 overflow-hidden opacity-70">
+                    <div className="bg-[#1C1C1E]/50 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden">
                         <button
                             onClick={() => setExpandedSection(expandedSection === 'style' ? null : 'style')}
-                            className="w-full p-4 flex items-center justify-between"
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
                         >
-                            <div className="flex items-center gap-2">
-                                <Lock className="w-4 h-4 text-gray-600" />
-                                <span className="text-gray-400 font-medium">Sugestoes de Estilo</span>
-                            </div>
+                            <span className="text-gray-400 font-medium">Sugestões de Estilo</span>
                             <ChevronDown className={`w-5 h-5 text-gray-600 transition-transform ${expandedSection === 'style' ? 'rotate-180' : ''}`} />
                         </button>
                         {expandedSection === 'style' && (
-                            <div className="px-4 pb-4 border-t border-white/5 pt-3">
-                                <div className="text-center py-2">
-                                    <span className="text-gray-500 text-sm">Conteudo bloqueado - Acesso VIP</span>
+                            <div className="px-4 pb-4 pt-2 border-t border-white/5">
+                                <div className="blur-[6px] select-none pointer-events-none space-y-3 mb-4">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Cores quentes valorizam sua tonalidade de pele...</span>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                                        <span className="text-gray-400 text-sm">Óculos retangulares equilibram formato do rosto...</span>
+                                    </div>
                                 </div>
                             </div>
                         )}

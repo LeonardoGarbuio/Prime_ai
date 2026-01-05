@@ -39,6 +39,16 @@ export interface FaceFingerprint {
     faceShape: string;
     timestamp: number;
     analysisCount: number;
+    // Cache da última análise da IA (para reusar quando a mesma pessoa voltar)
+    lastAnalysis?: {
+        pontos_fortes?: string[];
+        pontos_de_atencao?: string[];
+        analise_pele?: string;
+        arquetipo?: string;
+        resumo_brutal?: string;
+        nota_final?: number;
+        ai_provider?: string;
+    };
 }
 
 export interface FaceCache {
@@ -228,8 +238,9 @@ export class FaceFingerprintCache {
 
     /**
      * Salva ou atualiza fingerprint no cache
+     * @param analysis - Análise da IA para cachear (opcional)
      */
-    save(metrics: FaceMetrics, faceShape: string): void {
+    save(metrics: FaceMetrics, faceShape: string, analysis?: FaceFingerprint['lastAnalysis']): void {
         try {
             const cache = this.load();
             const id = generateFingerprint(metrics);
@@ -243,18 +254,32 @@ export class FaceFingerprintCache {
                 if (index >= 0) {
                     cache.fingerprints[index].timestamp = Date.now();
                     cache.fingerprints[index].analysisCount++;
-                    cache.fingerprints[index].metrics = metrics; // Atualiza métricas (média seria melhor)
+                    cache.fingerprints[index].metrics = metrics;
+
+                    // Atualizar análise APENAS se a nova for da IA real (não fallback)
+                    if (analysis && analysis.ai_provider !== 'LOCAL' && analysis.ai_provider !== 'LOCAL_FALLBACK') {
+                        cache.fingerprints[index].lastAnalysis = analysis;
+                        console.log(`🧠 Análise da IA cacheada para este rosto!`);
+                    }
                     console.log(`📝 Fingerprint atualizado - Análises: ${cache.fingerprints[index].analysisCount}`);
                 }
             } else {
                 // Adicionar novo
-                cache.fingerprints.push({
+                const newFp: FaceFingerprint = {
                     id,
                     metrics,
                     faceShape,
                     timestamp: Date.now(),
                     analysisCount: 1
-                });
+                };
+
+                // Salvar análise se existir e não for fallback
+                if (analysis && analysis.ai_provider !== 'LOCAL' && analysis.ai_provider !== 'LOCAL_FALLBACK') {
+                    newFp.lastAnalysis = analysis;
+                    console.log(`🧠 Análise da IA salva junto com fingerprint!`);
+                }
+
+                cache.fingerprints.push(newFp);
                 console.log(`✨ Novo fingerprint salvo - Formato: ${faceShape}`);
             }
 
@@ -329,7 +354,64 @@ export class FaceFingerprintCache {
             totalAnalyses
         };
     }
+
+    /**
+     * Busca análise cacheada para um fingerprint similar
+     * Retorna a análise se existir e for válida
+     */
+    getCachedAnalysis(metrics: FaceMetrics): FaceFingerprint['lastAnalysis'] | null {
+        const similar = this.findSimilar(metrics);
+        if (similar && similar.lastAnalysis) {
+            console.log('🧠 Análise da IA encontrada no cache do fingerprint!');
+            console.log(`   → pontos_fortes: ${similar.lastAnalysis.pontos_fortes?.length || 0} itens`);
+            console.log(`   → ai_provider: ${similar.lastAnalysis.ai_provider}`);
+            return similar.lastAnalysis;
+        }
+        return null;
+    }
 }
 
 // Exportar instância singleton
 export const faceFingerprintCache = new FaceFingerprintCache();
+
+/**
+ * Função helper para salvar análise da IA junto com fingerprint
+ * Chamada após receber resposta da API
+ */
+export function saveAnalysisToFingerprint(
+    landmarks: any[],
+    faceShape: string,
+    analysisResult: any
+): void {
+    try {
+        const metrics = calculateFaceMetrics(landmarks as any);
+
+        // Extrair dados relevantes para cache
+        const analysis: FaceFingerprint['lastAnalysis'] = {
+            pontos_fortes: analysisResult?.rosto?.pontos_fortes,
+            pontos_de_atencao: analysisResult?.rosto?.pontos_de_atencao,
+            analise_pele: analysisResult?.rosto?.analise_pele,
+            arquetipo: analysisResult?.analise_geral?.arquetipo,
+            resumo_brutal: analysisResult?.analise_geral?.resumo_brutal,
+            nota_final: parseFloat(analysisResult?.analise_geral?.nota_final) || 0,
+            ai_provider: analysisResult?.ai_provider || 'UNKNOWN'
+        };
+
+        faceFingerprintCache.save(metrics, faceShape, analysis);
+    } catch (error) {
+        console.error('Erro ao salvar análise no fingerprint:', error);
+    }
+}
+
+/**
+ * Função helper para buscar análise cacheada por landmarks
+ */
+export function getCachedAnalysisFromFingerprint(landmarks: any[]): FaceFingerprint['lastAnalysis'] | null {
+    try {
+        const metrics = calculateFaceMetrics(landmarks as any);
+        return faceFingerprintCache.getCachedAnalysis(metrics);
+    } catch (error) {
+        console.error('Erro ao buscar análise no fingerprint:', error);
+        return null;
+    }
+}

@@ -295,7 +295,13 @@ TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na
                 },
                 "rosto": {
                     "formato_rosto": "Oval" | "Quadrado" | "Redondo" | "Diamante" | "Triângulo" | "Coração",
-                        "pontos_fortes": ["Característica Técnica 1", "Característica Técnica 2"],
+                        "pontos_fortes": [
+                            "MÍNIMO 4 pontos. Cada ponto deve ser uma frase COMPLETA e ESPECÍFICA sobre essa pessoa.",
+                            "Exemplo: 'Maxilar bem definido com ângulo de 118° que transmite força e masculinidade'",
+                            "Exemplo: 'Olhos amendoados com boa proporção em relação ao terço médio, criando harmonia natural'",
+                            "Exemplo: 'Zigomas proeminentes que captam bem a luz e estruturam o rosto'",
+                            "NÃO use frases genéricas como 'estrutura facial equilibrada' - seja ESPECÍFICO sobre O QUE está bom e PORQUÊ"
+                        ],
                             "pontos_de_atencao": ["Observação de visagismo - ex: barba pode definir mais a mandíbula", "Dica de estilo - ex: cabelo com volume no topo alonga o rosto"],
                                 "analise_pele": "Análise da textura para recomendações de skincare básico (hidratante, protetor)."
                 },
@@ -483,13 +489,14 @@ TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na
                 rosto: {
                     formato_rosto: shape,
                     pontos_fortes: [
-                        `Formato ${shape} bem definido`,
-                        propSimetria > 0.85 ? "Boa simetria mandibular" : "Estrutura facial equilibrada",
-                        propAlturaLargura > 1.4 ? "Proporções alongadas elegantes" : "Proporções harmônicas"
+                        `Formato ${shape} com estrutura óssea bem definida — ${propAlturaLargura > 1.2 ? 'proporção vertical elegante que alonga naturalmente o rosto' : 'equilíbrio harmonioso entre altura e largura facial'}`,
+                        `Simetria mandibular de ${Math.round(propSimetria * 100)}% — ${propSimetria > 0.85 ? 'acima da média populacional, indicando boa harmonia entre os lados' : 'dentro da faixa considerada atrativa pela antropometria'}`,
+                        `Ângulo mandibular de ${(metrics?.angulo_mandibula_medio || 120).toFixed(0)}° — ${(metrics?.angulo_mandibula_medio || 120) < 120 ? 'maxilar mais definido que transmite força e presença' : 'contorno suave que confere aparência jovial'}`,
+                        `Proporção áurea facial de ${Math.round((parseFloat(String(beautyScore)) / 10) * 100)}% — ${parseFloat(String(beautyScore)) >= 7.5 ? 'alinhamento natural com padrões clássicos de beleza' : 'características únicas que fogem do padrão comum'}`
                     ],
                     pontos_de_atencao: [
-                        propSimetria < 0.9 ? "Pequena assimetria detectada" : "Refinamento de contorno",
-                        "Análise de pele requer IA avançada"
+                        propSimetria < 0.9 ? "Pequena variação de simetria detectada — pode ser otimizada com técnicas de visagismo" : "Estrutura já equilibrada — foco em manutenção",
+                        "Análise de pele e textura requer processamento avançado de IA"
                     ],
                     analise_pele: "Análise básica - para detalhes completos, tente novamente."
                 },
@@ -588,8 +595,13 @@ TAREFA: Realizar uma análise forense e geométrica de alta precisão da face na
                 },
                 rosto: {
                     formato_rosto: shape,
-                    pontos_fortes: [`Formato ${shape} bem definido`, "Estrutura facial equilibrada"],
-                    pontos_de_atencao: ["Para análise detalhada, tente novamente"],
+                    pontos_fortes: [
+                        `Formato ${shape} com estrutura óssea bem definida — ${propAlturaLargura > 1.2 ? 'proporção vertical elegante' : 'equilíbrio harmonioso entre altura e largura'}`,
+                        `Simetria mandibular de ${Math.round(propSimetria * 100)}% — ${propSimetria > 0.85 ? 'acima da média populacional' : 'dentro da faixa atrativa'}`,
+                        `Ângulo mandibular de ${(metrics?.angulo_mandibula_medio || 120).toFixed(0)}° — ${(metrics?.angulo_mandibula_medio || 120) < 120 ? 'maxilar definido' : 'contorno suave e jovial'}`,
+                        `Proporção áurea de ${Math.round((parseFloat(String(beautyScore)) / 10) * 100)}% — alinhamento com padrões de beleza`
+                    ],
+                    pontos_de_atencao: ["Para análise mais detalhada com dicas de estilo, tente novamente"],
                     analise_pele: "Análise básica disponível."
                 },
                 grafico_radar: {

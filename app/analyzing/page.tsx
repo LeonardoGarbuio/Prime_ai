@@ -7,6 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { BrainCircuit, ScanFace, Activity, CheckCircle2, Crown, Lock } from "lucide-react";
 import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
+import { saveAnalysisToFingerprint, getCachedAnalysisFromFingerprint } from "@/utils/faceFingerprint";
 import { useApiLimiter } from "@/lib/hooks/useApiLimiter";
 import { Button } from "@/components/ui/Button";
 
@@ -108,6 +109,7 @@ export default function AnalyzingPage() {
             // MediaPipe Analysis
             let metrics = null;
             let faceDetected = false;
+            let detectedLandmarks: any[] | null = null; // Guardar para usar no fingerprint
             try {
                 console.log("🔍 Starting MediaPipe Analysis...");
                 const img = new Image();
@@ -120,6 +122,7 @@ export default function AnalyzingPage() {
                 const landmarks = await detectFaceLandmarks(img);
                 if (landmarks) {
                     faceDetected = true;
+                    detectedLandmarks = landmarks; // Guardar para fingerprint
                     metrics = calculateFaceMetrics(landmarks);
                     const beautyScore = calculateBeautyScore(landmarks);
                     metrics = { ...metrics, beauty_score: beautyScore };
@@ -166,6 +169,30 @@ export default function AnalyzingPage() {
 
                     if (data.error === "face_not_detected") {
                         throw new Error("FACE_NOT_DETECTED");
+                    }
+
+                    // ===== VERIFICAR CACHE DO FINGERPRINT SE FOR FALLBACK =====
+                    if (data.is_fallback && detectedLandmarks) {
+                        const cachedAnalysis = getCachedAnalysisFromFingerprint(detectedLandmarks);
+                        if (cachedAnalysis && cachedAnalysis.pontos_fortes?.length) {
+                            console.log("🧠 Usando análise cacheada do fingerprint!");
+                            // Mesclar análise cacheada com resultado atual
+                            data.rosto.pontos_fortes = cachedAnalysis.pontos_fortes;
+                            if (cachedAnalysis.pontos_de_atencao?.length) {
+                                data.rosto.pontos_de_atencao = cachedAnalysis.pontos_de_atencao;
+                            }
+                            if (cachedAnalysis.analise_pele) {
+                                data.rosto.analise_pele = cachedAnalysis.analise_pele;
+                            }
+                            data.ai_provider = 'CACHED';
+                        }
+                    }
+
+                    // ===== SALVAR NO FINGERPRINT SEMPRE =====
+                    // Mesmo fallback usa métricas reais do MediaPipe, então vale cachear!
+                    if (detectedLandmarks) {
+                        const faceShape = data.rosto?.formato_rosto || metrics?.formato_rosto || 'OVAL';
+                        saveAnalysisToFingerprint(detectedLandmarks, faceShape, data);
                     }
 
                     // ===== SALVAR NO CACHE =====
