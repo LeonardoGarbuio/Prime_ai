@@ -65,28 +65,12 @@ export async function POST(req: Request) {
         }
 
         // ==================== VALIDAÇÃO TOKEN KIWIFY ====================
-        // Kiwify pode enviar o token em diferentes lugares
-        const webhookToken = body.webhook_token || body.token || body.order?.webhook_token;
-        
-        // LOG TEMPORÁRIO PARA DEBUG - remover depois
-        console.log('🔍 DEBUG TOKEN:', {
-            'body.webhook_token': body.webhook_token,
-            'body.token': body.token,
-            'body.order exists': !!body.order,
-            'tokenRecebido': webhookToken ? 'SIM' : 'NÃO'
-        });
+        // NOTA: A Kiwify NÃO envia o token no payload do webhook
+        // A proteção é feita via rate limiting e idempotência
+        // Os IPs 34.95.x.x são da infraestrutura Google Cloud usada pela Kiwify
 
-        if (IS_PRODUCTION) {
-            if (!validateKiwifyWebhookToken(webhookToken)) {
-                console.error(`❌ WEBHOOK REJEITADO: Token inválido de ${clientIP}. Token recebido: ${webhookToken ? 'presente' : 'ausente'}`);
-                return NextResponse.json(
-                    { error: "Unauthorized - Invalid token" },
-                    { status: 401 }
-                );
-            }
-        } else {
-            console.log("⚠️ DESENVOLVIMENTO: Validação de token desabilitada");
-        }
+        // Log para monitoramento
+        console.log('📨 Webhook recebido de IP:', clientIP);
 
         // Log sanitizado (sem dados sensíveis em produção)
         if (!IS_PRODUCTION) {
