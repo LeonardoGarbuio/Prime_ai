@@ -35,7 +35,22 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 export async function POST(req: Request) {
     const clientIP = getClientIP(req);
 
-    // Rate limiting removido - webhook precisa processar todas as requisições
+    // ==================== RATE LIMITING ====================
+    const rateLimit = checkRateLimit(clientIP, 30, 60000); // 30 req/min por IP
+
+    if (!rateLimit.allowed) {
+        console.warn(`⚠️ Rate limit excedido para IP: ${clientIP}`);
+        return NextResponse.json(
+            { error: "Too many requests" },
+            {
+                status: 429,
+                headers: {
+                    'Retry-After': String(Math.ceil(rateLimit.resetIn / 1000)),
+                    'X-RateLimit-Remaining': '0'
+                }
+            }
+        );
+    }
 
     try {
         // Obter corpo raw para validação HMAC
