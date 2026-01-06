@@ -88,10 +88,13 @@ export async function POST(req: Request) {
         }
 
         // ==================== EXTRAÇÃO DE DADOS ====================
-        const evento = body.order_status || body.event || body.webhook_event_type || body.tipo;
-        const email = body.Customer?.email || body.customer?.email || body.email;
-        const nome = body.Customer?.full_name || body.customer?.name || body.nome;
-        const orderId = body.order_id || body.id || body.subscription_id;
+        // Kiwify envia dados dentro de "order" - ver payload real acima
+        const orderData = body.order || body;
+
+        const evento = orderData.webhook_event_type || orderData.order_status || body.event || body.tipo;
+        const email = orderData.Customer?.email || orderData.customer?.email || body.Customer?.email || body.email;
+        const nome = orderData.Customer?.full_name || orderData.customer?.name || body.Customer?.full_name || body.nome;
+        const orderId = orderData.order_id || body.order_id || body.id || orderData.subscription_id;
         // const productId = body.product_id; // Disponível para uso futuro
 
         // ==================== VALIDAÇÃO DE EMAIL ====================
@@ -135,6 +138,7 @@ export async function POST(req: Request) {
             // ===== ATIVAÇÃO DE ASSINATURA =====
             case "paid":
             case "approved":
+            case "order_approved":
             case "compra_aprovada":
                 result = await handleActivation(emailNormalizado, orderId, nome);
                 break;
