@@ -143,6 +143,7 @@ export async function POST(req: Request) {
 
             // ===== REEMBOLSO =====
             case "refunded":
+            case "order_refunded":
             case "reembolso":
                 result = await handleRefund(emailNormalizado, orderId);
                 break;
