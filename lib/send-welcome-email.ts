@@ -21,7 +21,7 @@ export async function sendEmail({ email, nome, subject, htmlContent, replyTo }: 
     const payload = {
         sender: {
             name: "Prime AI",
-            email: "leonardogarbuiocavalheiro@gmail.com" // Brevo exige remetente verificado
+            email: "useprimeai@gmail.com" // Remetente verificado no Brevo
         },
         to: [
             {
@@ -31,7 +31,7 @@ export async function sendEmail({ email, nome, subject, htmlContent, replyTo }: 
         ],
         subject: subject || "Bem-vindo ao Prime AI VIP!",
         htmlContent: htmlContent || "<p>Bem-vindo!</p>",
-        replyTo: replyTo || { email: "leonardogarbuiocavalheiro@gmail.com", name: "Suporte Prime AI" }
+        replyTo: replyTo || { email: "useprimeai@gmail.com", name: "Suporte Prime AI" }
     };
 
     try {
