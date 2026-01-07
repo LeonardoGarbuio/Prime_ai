@@ -24,6 +24,22 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 export async function POST(req: Request) {
     const clientIP = getClientIP(req);
 
+    // ==================== VIP OPEN ACCESS (Promoção 24h - AUTOMÁTICO) ====================
+    // 🎁 HABILITADO EM: 07/01/2026 às 14:24 (Brasília)
+    // ⏰ EXPIRA EM: 08/01/2026 às 14:24 (Brasília) - AUTOMÁTICO!
+    const VIP_PROMO_EXPIRATION = new Date('2026-01-08T17:24:00Z'); // UTC = Brasília + 3h
+    const isPromoActive = new Date() < VIP_PROMO_EXPIRATION;
+
+    if (isPromoActive) {
+        const timeLeft = Math.floor((VIP_PROMO_EXPIRATION.getTime() - Date.now()) / 1000 / 60);
+        console.log(`🎁 VIP OPEN ACCESS (Promoção): ${clientIP} | Restam ${timeLeft} minutos`);
+        return NextResponse.json({
+            ativo: true,
+            isPromo: true,
+            message: "Acesso VIP liberado (promoção 24h)"
+        });
+    }
+
     // ==================== RATE LIMITING ====================
     // Mais restritivo para endpoint de autenticação: 5 tentativas por minuto
     const rateLimit = checkRateLimit(`auth:${clientIP}`, 5, 60000);
