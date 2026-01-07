@@ -1,5 +1,48 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIP } from "@/lib/security";
+import * as crypto from 'crypto';
+
+// 🎯 SISTEMA DE OVERRIDE DE NOTAS (TEMPORÁRIO)
+// Para usar: coloque fotos em temp-scores/ com nome NOTA_arquivo.jpg
+// Execute: npx ts-node scripts/generate-score-overrides.ts
+// Para remover: delete lib/score-overrides.json
+
+interface ScoreOverride {
+    hash: string;
+    nota: number;
+    arquivo: string;
+}
+
+function getScoreOverrides(): Record<string, ScoreOverride> {
+    try {
+        // Dynamic import para evitar erro se arquivo não existir
+        const overrides = require('@/lib/score-overrides.json');
+        // Ignora se for apenas o placeholder
+        if (overrides._info) return {};
+        return overrides;
+    } catch {
+        return {};
+    }
+}
+
+function checkScoreOverride(base64Image: string): ScoreOverride | null {
+    const overrides = getScoreOverrides();
+    if (Object.keys(overrides).length === 0) return null;
+
+    // Gera hash da imagem
+    const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(cleanBase64, 'base64');
+    const hash = crypto.createHash('sha256').update(buffer).digest('hex').substring(0, 16);
+
+    console.log('🔍 Override check - Hash da imagem:', hash);
+
+    if (overrides[hash]) {
+        console.log(`✨ OVERRIDE ENCONTRADO! Nota: ${overrides[hash].nota} (${overrides[hash].arquivo})`);
+        return overrides[hash];
+    }
+
+    return null;
+}
 
 // 🔧 HELPER: Extrai JSON de texto (incluindo blocos Markdown)
 function extractJSON(text: string): string | null {
@@ -53,6 +96,51 @@ export async function POST(req: Request) {
 
         if (!faceImage) {
             return NextResponse.json({ error: "Imagem obrigatória" }, { status: 400 });
+        }
+
+        // 🎯 VERIFICAÇÃO DE OVERRIDE DE NOTA
+        const override = checkScoreOverride(faceImage);
+        if (override) {
+            console.log(`✨ RETORNANDO OVERRIDE: Nota ${override.nota}`);
+
+            // Gera resultado completo com a nota fixa
+            const shape = metrics?.formato_rosto || "Oval";
+            return NextResponse.json({
+                analise_geral: {
+                    nota_final: override.nota,
+                    nota_potencial: Math.min(9.9, override.nota + 0.5),
+                    idade_real_estimada: 25,
+                    potencial_genetico: override.nota >= 9 ? "Elite" : override.nota >= 8 ? "Alto" : "Médio",
+                    arquetipo: "THE NOBLE",
+                    resumo_brutal: `Análise Premium. Score: ${override.nota}/10.`
+                },
+                rosto: {
+                    formato_rosto: shape,
+                    pontos_fortes: [
+                        "Estrutura facial harmoniosa e proporcional",
+                        "Simetria acima da média",
+                        "Traços bem definidos",
+                        "Proporção áurea presente"
+                    ],
+                    pontos_de_atencao: ["Continuar com cuidados de skincare"],
+                    analise_pele: "Pele saudável com boa textura."
+                },
+                grafico_radar: {
+                    simetria: Math.round(override.nota * 10),
+                    pele: Math.round(override.nota * 9.5),
+                    estrutura_ossea: Math.round(override.nota * 10),
+                    terco_medio: Math.round(override.nota * 9),
+                    proporcao_aurea: Math.round(override.nota * 10)
+                },
+                corpo_postura: { analise: "Apenas rosto visível.", gordura_estimada: "Baixa" },
+                plano_harmonizacao: {
+                    passo_1_imediato: "Manter rotina atual",
+                    passo_2_rotina: "Skincare diário",
+                    passo_3_longo_prazo: "Consulta de visagismo para otimização"
+                },
+                ai_provider: "OVERRIDE",
+                _override_info: override.arquivo
+            });
         }
 
         const cleanBase64 = (str: string) => str.replace(/^data:image\/\w+;base64,/, "");

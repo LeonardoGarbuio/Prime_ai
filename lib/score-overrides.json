@@ -1,0 +1,4 @@
+{
+    "_info": "Arquivo gerado automaticamente. Para apagar tudo, delete este arquivo.",
+    "_como_usar": "Execute: npx ts-node scripts/generate-score-overrides.ts"
+}
