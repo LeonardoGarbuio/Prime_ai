@@ -62,8 +62,26 @@ export async function sendEmail({ email, nome, subject, htmlContent, replyTo }: 
 }
 
 // Wrapper para manter compatibilidade com código existente de boas-vindas
-export async function sendWelcomeEmail({ email, nome }: { email: string; nome?: string }): Promise<boolean> {
+export async function sendWelcomeEmail({ email, nome, senha }: { email: string; nome?: string; senha?: string }): Promise<boolean> {
     const firstName = nome?.split(' ')[0] || 'VIP';
+
+    // Seção de credenciais (só aparece se tem senha)
+    const credenciaisHTML = senha ? `
+            <div style="background: rgba(57, 255, 20, 0.1); border: 1px solid rgba(57, 255, 20, 0.3); border-radius: 12px; padding: 20px; margin: 20px 0;">
+                <h3 style="color: #39FF14; font-size: 14px; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 2px;">🔐 Suas Credenciais de Acesso</h3>
+                <div style="background: #000; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                    <p style="color: #888; font-size: 12px; margin: 0 0 5px 0;">EMAIL:</p>
+                    <p style="color: #fff; font-size: 16px; margin: 0; font-family: monospace;">${email}</p>
+                </div>
+                <div style="background: #000; padding: 15px; border-radius: 8px;">
+                    <p style="color: #888; font-size: 12px; margin: 0 0 5px 0;">SENHA:</p>
+                    <p style="color: #39FF14; font-size: 20px; margin: 0; font-family: monospace; letter-spacing: 3px; font-weight: bold;">${senha}</p>
+                </div>
+                <p style="color: #666; font-size: 11px; margin: 15px 0 0 0; text-align: center;">
+                    ⚠️ Guarde esta senha em local seguro. Você precisará dela para acessar o Scanner VIP.
+                </p>
+            </div>
+    ` : '';
 
     const html = `
 <!DOCTYPE html>
@@ -87,8 +105,10 @@ export async function sendWelcomeEmail({ email, nome }: { email: string; nome?: 
             <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
                 Sua assinatura <strong style="color: #39FF14;">VIP</strong> está ativa!
             </p>
+
+            ${credenciaisHTML}
             
-            <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+            <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin: 20px 0;">
                 Agora você tem acesso ilimitado a:
             </p>
             
@@ -97,6 +117,7 @@ export async function sendWelcomeEmail({ email, nome }: { email: string; nome?: 
                 <li>👔 Guia de vestuário exclusivo</li>
                 <li>💇 Recomendações de cortes e estilos</li>
                 <li>🎯 Dossiê completo de visagismo</li>
+                <li>💪 Plano de ação de 30 dias</li>
                 <li>♾️ Análises ilimitadas</li>
             </ul>
             

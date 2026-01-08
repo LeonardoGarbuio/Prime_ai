@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import html2canvas from 'html2canvas';
 import { UploadZone } from '@/components/ui/UploadZone';
 import { Button } from '@/components/ui/Button';
@@ -10,7 +11,7 @@ import {
     Lock, Crown, Sparkles, AlertTriangle, CheckCircle2, Zap,
     ScanFace, User, ArrowUp, ArrowDown, Star, XCircle,
     Palette, Shirt, ShoppingBag, Ban, Glasses, ChevronDown, Download,
-    Share2, MessageCircle
+    Share2, MessageCircle, TrendingUp, Dumbbell, Calendar
 } from 'lucide-react';
 import {
     Radar,
@@ -22,6 +23,8 @@ import {
 } from 'recharts';
 import { detectFaceLandmarks, calculateFaceMetrics, initializeFaceLandmarker, calculateBeautyScore } from "@/utils/faceLandmarker";
 import { generateVIPReport } from "@/utils/generatePDF";
+import { getActionPlans, ActionPlan } from '@/lib/actionPlans';
+import { useEvolutionHistory } from '@/lib/hooks/useEvolutionHistory';
 
 // Format face shape for display (fix Portuguese characters)
 const formatFaceShape = (shape: string) => {
@@ -61,6 +64,12 @@ export default function VipScannerPage() {
     const [previousResult, setPreviousResult] = useState<any>(null);
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Estado para planos de ação personalizados
+    const [actionPlans, setActionPlans] = useState<ActionPlan[]>([]);
+
+    // Hook de evolução para rastrear progresso
+    const { addEntry, canAddEntry } = useEvolutionHistory();
 
     // Ref para captura de tela do card
     const shareCardRef = useRef<HTMLDivElement>(null);
@@ -268,6 +277,18 @@ export default function VipScannerPage() {
 
             console.log("✨ VIP Result:", finalResult);
             setResult(finalResult);
+
+            // Gerar planos de ação personalizados baseados nos problemas detectados
+            const plans = getActionPlans(finalResult);
+            setActionPlans(plans);
+            console.log("🎯 Action Plans gerados:", plans.map(p => p.title));
+
+            // Salvar na evolução (se permitido - mínimo 6 dias entre entradas)
+            const { allowed } = canAddEntry();
+            if (allowed) {
+                addEntry(finalResult, faceImage || undefined);
+                console.log("📈 Entrada de evolução salva");
+            }
         } catch (error) {
             console.error(error);
             alert('Erro na análise. Tente novamente.');
@@ -286,8 +307,8 @@ export default function VipScannerPage() {
     ] : [];
 
     const currentScore = parseFloat(String(result?.analise_geral?.nota_final || "7.5"));
-    const potentialScore = Math.min(10.0, parseFloat(String(result?.analise_geral?.nota_potencial || (currentScore + 1.0).toFixed(1))));
-    const gap = (potentialScore - currentScore).toFixed(1);
+    const potentialScore = Math.min(10.0, parseFloat(String(result?.analise_geral?.nota_potencial || (currentScore + 1.0)))).toFixed(1);
+    const gap = (parseFloat(potentialScore) - currentScore).toFixed(1);
 
     // Compartilhar no WhatsApp
     const handleShareWhatsApp = () => {
@@ -1191,6 +1212,141 @@ export default function VipScannerPage() {
                                     )}
                                 </div>
                             </div>
+                        </section>
+
+                        {/* === PLANO DE AÇÃO 30 DIAS (GERADO PELA IA) === */}
+                        {result?.plano_acao_30_dias && (
+                            <section className="space-y-6">
+                                {/* Header Minimalista */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <p className="text-[11px] font-medium text-white/40 uppercase tracking-[0.2em]">
+                                                Programa Personalizado
+                                            </p>
+                                            <h2 className="text-2xl font-semibold text-white tracking-tight">
+                                                {result.plano_acao_30_dias.titulo || "Seu Plano de Transformação"}
+                                            </h2>
+                                        </div>
+                                        <div className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+                                            <span className="text-[10px] font-medium text-white/60 uppercase tracking-wider">
+                                                30 Dias
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p className="text-[15px] text-white/50 leading-relaxed">
+                                        {result.plano_acao_30_dias.foco_principal || "Exercícios personalizados baseados na sua análise facial"}
+                                    </p>
+                                </div>
+
+                                {/* Exercícios - Estilo Apple */}
+                                <div className="space-y-2">
+                                    {result.plano_acao_30_dias.exercicios?.map((exercicio: any, idx: number) => (
+                                        <div
+                                            key={idx}
+                                            className="bg-white/[0.03] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden hover:bg-white/[0.05] transition-all duration-300"
+                                        >
+                                            <button
+                                                onClick={() => setExpandedSection(expandedSection === `ia_ex_${idx}` ? null : `ia_ex_${idx}`)}
+                                                className="w-full px-5 py-4 flex items-center justify-between"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center">
+                                                        <span className="text-lg">{exercicio.icone || "○"}</span>
+                                                    </div>
+                                                    <div className="text-left">
+                                                        <h3 className="font-medium text-white text-[15px]">{exercicio.nome}</h3>
+                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                            <span className="text-[12px] text-white/40">{exercicio.frequencia}</span>
+                                                            <span className="w-1 h-1 rounded-full bg-white/20" />
+                                                            <span className="text-[12px] text-white/60 font-medium">{exercicio.duracao}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <ChevronDown className={`w-4 h-4 text-white/30 transition-transform duration-300 ${expandedSection === `ia_ex_${idx}` ? 'rotate-180' : ''}`} />
+                                            </button>
+
+                                            {expandedSection === `ia_ex_${idx}` && (
+                                                <div className="px-5 pb-5 space-y-4 border-t border-white/[0.04] pt-4">
+                                                    <div>
+                                                        <p className="text-[11px] font-medium text-white/30 uppercase tracking-wider mb-2">
+                                                            Instruções
+                                                        </p>
+                                                        <p className="text-[14px] text-white/70 leading-relaxed">
+                                                            {exercicio.instrucoes}
+                                                        </p>
+                                                    </div>
+                                                    <div className="pt-3 border-t border-white/[0.04]">
+                                                        <p className="text-[11px] font-medium text-primary/70 uppercase tracking-wider mb-2">
+                                                            Resultado Esperado
+                                                        </p>
+                                                        <p className="text-[14px] text-white/60 leading-relaxed">
+                                                            {exercicio.beneficio}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Grid Insights */}
+                                <div className="grid md:grid-cols-2 gap-3">
+                                    {result.plano_acao_30_dias.meta_semanal && (
+                                        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="w-6 h-6 rounded-md bg-white/[0.06] flex items-center justify-center">
+                                                    <Calendar className="w-3.5 h-3.5 text-white/50" />
+                                                </div>
+                                                <span className="text-[13px] font-medium text-white/80">Meta Semanal</span>
+                                            </div>
+                                            <p className="text-[13px] text-white/50 leading-relaxed">
+                                                {result.plano_acao_30_dias.meta_semanal}
+                                            </p>
+                                        </div>
+                                    )}
+                                    {result.plano_acao_30_dias.dica_pro && (
+                                        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                                                    <Sparkles className="w-3.5 h-3.5 text-primary/70" />
+                                                </div>
+                                                <span className="text-[13px] font-medium text-white/80">Dica Pro</span>
+                                            </div>
+                                            <p className="text-[13px] text-white/50 leading-relaxed">
+                                                {result.plano_acao_30_dias.dica_pro}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* === LINK PARA EVOLUÇÃO === */}
+                        <section className="py-6">
+                            <Link href="/evolution">
+                                <div className="p-6 rounded-2xl bg-gradient-to-r from-primary/10 to-cyan-500/10 border border-primary/30 hover:border-primary/50 transition-all group cursor-pointer">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <TrendingUp className="w-6 h-6 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-white group-hover:text-primary transition-colors">
+                                                    Rastreie Sua Evolução
+                                                </h3>
+                                                <p className="text-sm text-gray-400">
+                                                    Faça análises semanais e veja seu progresso em gráficos
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-primary">
+                                            <Calendar className="w-5 h-5" />
+                                            <span className="text-sm font-bold">Ver Timeline →</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
                         </section>
 
                         {/* LEGAL DISCLAIMER */}

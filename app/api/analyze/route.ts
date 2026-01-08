@@ -144,6 +144,11 @@ export async function POST(req: Request) {
 
         if (mode === "stylist") {
             promptText = `
+            🚨 INSTRUÇÃO CRÍTICA: Sua resposta deve ser APENAS um JSON válido. 
+            NÃO inclua NENHUM texto antes ou depois do JSON.
+            NÃO use Markdown, código, títulos ou explicações.
+            Comece sua resposta DIRETAMENTE com { e termine com }
+            
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial, Estética e Imagem Pessoal.
             CONTEXTO DO USUÁRIO: "${userContext || 'Análise de look do dia'}"
             
@@ -241,12 +246,57 @@ TAREFA: Realizar uma análise COMPLETA(Forense + Estilo).
             "truque_de_5_minutos": "Ex: Solte dois fios na frente para suavizar o queixo.",
                 "produto_chave": "Ex: Pomada matte para texturizar o cabelo."
     },
+    "plano_acao_30_dias": {
+        "titulo": "Título personalizado baseado no maior ponto fraco (ex: 'Definição de Mandíbula')",
+        "foco_principal": "Qual área será trabalhada (ex: 'Fortalecer músculos masseter e melhorar definição do maxilar')",
+        "exercicios": [
+            {
+                "nome": "Nome do exercício específico (ex: Mewing)",
+                "icone": "Emoji representativo (ex: 👅)",
+                "frequencia": "Ex: 24h/dia (postura) ou 3x ao dia",
+                "duracao": "Ex: 5 minutos ou contínuo",
+                "instrucoes": "Passo a passo detalhado de como fazer o exercício corretamente",
+                "beneficio": "O que esse exercício vai melhorar especificamente no rosto"
+            },
+            {
+                "nome": "Segundo exercício",
+                "icone": "😬",
+                "frequencia": "Ex: 2x ao dia",
+                "duracao": "20 repetições",
+                "instrucoes": "Instruções detalhadas",
+                "beneficio": "Benefício específico"
+            },
+            {
+                "nome": "Terceiro exercício",
+                "icone": "💆",
+                "frequencia": "1x ao dia",
+                "duracao": "5 minutos",
+                "instrucoes": "Instruções detalhadas",
+                "beneficio": "Benefício específico"
+            },
+            {
+                "nome": "Quarto exercício ou hábito",
+                "icone": "🧘",
+                "frequencia": "Diário",
+                "duracao": "Constante",
+                "instrucoes": "Instruções detalhadas",
+                "beneficio": "Benefício específico"
+            }
+        ],
+        "meta_semanal": "O que a pessoa pode esperar ver de mudança a cada semana",
+        "dica_pro": "Um conselho avançado para acelerar os resultados"
+    },
     "adaptacao_trend": "Se o usuário pediu uma tendência, explique como adaptar. Se não, dê uma dica de tendência atual."
 } `;
 
         } else {
             // === MODO FORENSE (PADRÃO) ===
             promptText = `
+            🚨 INSTRUÇÃO CRÍTICA: Sua resposta deve ser APENAS um JSON válido. 
+            NÃO inclua NENHUM texto antes ou depois do JSON.
+            NÃO use Markdown, código, títulos ou explicações.
+            Comece sua resposta DIRETAMENTE com { e termine com }
+            
             ATUE COMO: O maior especialista mundial em Visagismo, Antropometria Facial e Estética.
             
             ⚠️ VALIDAÇÃO CRÍTICA(EXECUTAR PRIMEIRO):

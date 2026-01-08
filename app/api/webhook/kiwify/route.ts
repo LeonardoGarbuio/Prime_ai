@@ -203,9 +203,9 @@ export async function POST(req: Request) {
 async function handleActivation(email: string, orderId: string, nome?: string): Promise<NextResponse> {
     console.log(`💰 Processando COMPRA para ${sanitizeForLogs(email)}`);
 
-    const ativado = await ativarAssinatura(email, orderId);
+    const resultado = await ativarAssinatura(email, orderId);
 
-    if (!ativado) {
+    if (!resultado.sucesso) {
         console.error(`❌ Falha ao ativar assinatura para ${sanitizeForLogs(email)}`);
         return NextResponse.json(
             { error: "Erro ao ativar assinatura" },
@@ -215,10 +215,10 @@ async function handleActivation(email: string, orderId: string, nome?: string): 
 
     console.log(`✅ Assinatura ATIVADA para ${sanitizeForLogs(email)}`);
 
-    // Email de boas-vindas (não bloqueia webhook)
+    // Email de boas-vindas COM SENHA (não bloqueia webhook)
     try {
-        await sendWelcomeEmail({ email, nome });
-        console.log(`📧 Email de boas-vindas enviado`);
+        await sendWelcomeEmail({ email, nome, senha: resultado.senha });
+        console.log(`📧 Email de boas-vindas enviado${resultado.senha ? ' (com senha)' : ''}`);
     } catch (emailError) {
         console.error(`⚠️ Erro ao enviar email (não crítico)`);
     }
@@ -236,9 +236,9 @@ async function handleRenewal(email: string, orderId: string): Promise<NextRespon
     const { verificarAssinatura } = await import('@/lib/supabase');
     const { ativo: estavaAtivo } = await verificarAssinatura(email);
 
-    const ativado = await ativarAssinatura(email, orderId);
+    const resultado = await ativarAssinatura(email, orderId);
 
-    if (!ativado) {
+    if (!resultado.sucesso) {
         console.error(`❌ Falha ao renovar assinatura`);
         return NextResponse.json(
             { error: "Erro ao renovar assinatura" },
@@ -253,7 +253,7 @@ async function handleRenewal(email: string, orderId: string): Promise<NextRespon
         try {
             // Pequeno delay para garantir propagação
             await new Promise(r => setTimeout(r, 1000));
-            await sendWelcomeEmail({ email, nome: "VIP Retornado" });
+            await sendWelcomeEmail({ email, nome: "VIP Retornado", senha: resultado.senha });
             console.log(`📧 Email de boas-vindas enviado (Reativação)`);
         } catch (error) {
             console.error(`⚠️ Erro ao enviar email de reativação`);

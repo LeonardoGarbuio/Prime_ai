@@ -623,6 +623,86 @@ export default function ResultsPage() {
                     </div>
                 </section>
 
+                {/* === PLANO DE AÇÃO (BLURRED - INCENTIVO VIP) === */}
+                <section className="relative overflow-hidden rounded-2xl border border-primary/20 mb-8">
+                    {/* Header sempre visível */}
+                    <div className="p-6 border-b border-white/10 bg-[#1C1C1E]">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-xl">
+                                    💪
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-white">Seu Plano de Ação Personalizado</h3>
+                                    <p className="text-xs text-gray-400">Exercícios para melhorar seus pontos fracos</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/30">
+                                <Lock className="w-3 h-3 text-primary" />
+                                <span className="text-xs text-primary font-bold">VIP</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Conteúdo Embaçado */}
+                    <div className="relative">
+                        <div className="blur-[6px] select-none pointer-events-none p-6 space-y-4 bg-[#1C1C1E]/50">
+                            {/* Treino de Mandíbula */}
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">👅</span>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="font-bold text-white">Mewing</h4>
+                                            <span className="text-xs text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">24h (postura)</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400">Língua pressionada no céu da boca, dentes encostados</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Jaw Clench */}
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">😬</span>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="font-bold text-white">Jaw Clench</h4>
+                                            <span className="text-xs text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">3x20 reps/dia</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400">Aperte os dentes por 5 segundos, relaxe</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mais exercícios... */}
+                            <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">💆</span>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <h4 className="font-bold text-white">Massagem Facial</h4>
+                                            <span className="text-xs text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">5 min/dia</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400">Massageie o lado mais fraco do rosto</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Overlay com CTA */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <button
+                                onClick={handleCheckout}
+                                className="px-6 py-3 bg-primary text-black font-bold rounded-xl flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_30px_rgba(57,255,20,0.3)]"
+                            >
+                                <Lock className="w-4 h-4" />
+                                Desbloquear Plano Completo
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
                 {/* === VIP SECTION (Original) === */}
                 <div className="p-10 rounded-3xl bg-gradient-to-b from-gray-900 to-black border border-primary/30 text-center space-y-8 relative overflow-hidden group shadow-[0_0_50px_rgba(57,255,20,0.1)]">
                     <div className="absolute inset-0 opacity-5 mix-blend-overlay" />

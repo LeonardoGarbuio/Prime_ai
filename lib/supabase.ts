@@ -100,24 +100,44 @@ export async function verificarAssinatura(email: string): Promise<{ ativo: boole
 /**
  * Ativar assinatura
  * IMPORTANTE: Falha explicitamente se Supabase não está configurado
+ * RETORNA: { sucesso: boolean, senha?: string } - senha apenas quando é uma nova ativação
  */
-export async function ativarAssinatura(email: string, kiwifyId?: string): Promise<boolean> {
+export async function ativarAssinatura(email: string, kiwifyId?: string): Promise<{ sucesso: boolean; senha?: string }> {
     const supabase = getSupabaseClient();
 
     // ❌ NÃO SIMULA SUCESSO - Falha explicitamente
     if (!supabase) {
         console.error('❌ FALHA CRÍTICA: Não é possível ativar assinatura - Supabase não configurado');
-        return false;
+        return { sucesso: false };
     }
 
     if (!email || typeof email !== 'string') {
         console.error('❌ Email inválido para ativação');
-        return false;
+        return { sucesso: false };
     }
 
     const emailNormalizado = email.toLowerCase().trim();
 
     try {
+        // Verificar se já existe assinante (para não resetar senha em renovação)
+        const { data: existing } = await supabase
+            .from('assinantes')
+            .select('id, senha')
+            .eq('email', emailNormalizado)
+            .single();
+
+        // Gerar senha apenas se for novo assinante OU se não tem senha ainda
+        let novaSenha: string | undefined;
+        let senhaParaSalvar: string | undefined;
+
+        if (!existing || !existing.senha) {
+            // Gerar senha aleatória de 8 caracteres (letras e números)
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            novaSenha = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+            senhaParaSalvar = novaSenha;
+            console.log(`🔐 Nova senha gerada para ${emailNormalizado.substring(0, 3)}***`);
+        }
+
         const { error } = await supabase
             .from('assinantes')
             .upsert({
@@ -126,20 +146,21 @@ export async function ativarAssinatura(email: string, kiwifyId?: string): Promis
                 kiwify_id: kiwifyId || null,
                 data_inicio: new Date().toISOString(),
                 data_fim: null, // Limpa data_fim ao ativar
+                ...(senhaParaSalvar && { senha: senhaParaSalvar }) // Só atualiza senha se nova
             }, {
                 onConflict: 'email'
             });
 
         if (error) {
             console.error('❌ Erro ao ativar assinatura:', error.message);
-            return false;
+            return { sucesso: false };
         }
 
         console.log(`✅ Assinatura ativada: ${emailNormalizado.substring(0, 3)}***`);
-        return true;
+        return { sucesso: true, senha: novaSenha };
     } catch (error) {
         console.error('❌ Exceção ao ativar assinatura');
-        return false;
+        return { sucesso: false };
     }
 }
 

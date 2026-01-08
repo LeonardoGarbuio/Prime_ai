@@ -19,10 +19,13 @@ const STEPS = [
     { label: "Gerando Dossiê Prime AI...", duration: 1000, icon: CheckCircle2 },
 ];
 
-// Passos mais curtos quando resultado vem do cache
+// Passos quando resultado vem do cache (mesma animação completa)
 const CACHE_STEPS = [
-    { label: "Verificando dados...", duration: 500, icon: ScanFace },
-    { label: "Carregando resultado...", duration: 500, icon: CheckCircle2 },
+    { label: "Mapeando 120 pontos faciais...", duration: 1500, icon: ScanFace },
+    { label: "Calculando Proporção Áurea...", duration: 1500, icon: BrainCircuit },
+    { label: "Analisando textura da pele...", duration: 1500, icon: Activity },
+    { label: "Detectando assimetria mandibular...", duration: 1500, icon: ScanFace },
+    { label: "Gerando Dossiê Prime AI...", duration: 1000, icon: CheckCircle2 },
 ];
 
 export default function AnalyzingPage() {
@@ -289,12 +292,7 @@ export default function AnalyzingPage() {
             <div className="flex-1 flex flex-col items-center justify-center px-4 relative z-10">
                 <div className="w-full max-w-md space-y-8 text-center">
 
-                    {/* Cache indicator */}
-                    {isFromCache && (
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs font-mono animate-pulse">
-                            ⚡ Carregando do cache
-                        </div>
-                    )}
+                    {/* Cache indicator removido para melhor UX - usuário não precisa saber */}
 
                     {/* Biometric Scanner Overlay */}
                     <div className="relative w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-primary/30 shadow-[0_0_50px_rgba(57,255,20,0.2)]">
